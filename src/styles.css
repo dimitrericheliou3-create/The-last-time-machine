@@ -3300,3 +3300,21 @@ body,.auth-shell,.loading-screen {
   object-fit: cover;
   display: block;
 }
+
+
+/* Brand clock: a continuous counter-clockwise spin, including the loading and legal marks. */
+.brand-mark .brand-clock-icon,
+.loading-screen .brand-mark .brand-clock-icon {
+  animation: brand-clock-reverse 3.6s linear infinite;
+  transform-origin: center;
+}
+@keyframes brand-clock-reverse {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark .brand-clock-icon,
+  .loading-screen .brand-mark .brand-clock-icon {
+    animation: none;
+  }
+}
