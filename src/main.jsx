@@ -1185,7 +1185,7 @@ function SettingsPage({workspace,canRenameWorkspace,workspaceName,setWorkspaceNa
     {key:'midnight',name:'Midnight',description:'Deep navy with bright cyan accents',swatches:['#081321','#122640','#55c7ff']},
     {key:'forest',name:'Forest',description:'Dark evergreen with mint accents',swatches:['#0b1713','#172d24','#69d8a2']},
     {key:'plum',name:'Plum',description:'Dark violet with lavender accents',swatches:['#140f20','#29203c','#b6a0ff']},
-    {key:'light',name:'Light',description:'Warm off-white with sage icons',swatches:['#f7f5ef','#fffdf8','#78866d']}
+    {key:'light',name:'Light',description:'Warm off-white with sage icons',swatches:['#f7f5ef','#fffdf8','#59694f']}
   ];
   return <><div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> PREFERENCES</div><h1>Settings</h1><p className="page-subtitle">Manage your workspace, appearance, and account.</p></div></div>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:18,marginTop:24}}>
