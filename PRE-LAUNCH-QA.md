@@ -14,7 +14,7 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 ## Still required before public launch
 - [x] Add operator name (Dimitre Richelieu), business address (Mourne Dou Don Road, Castries, Saint Lucia), and support/privacy email (richelieureserved@gmail.com) to legal pages and source documents.
 - [ ] Obtain legal review for Saint Lucia and the countries targeted.
-- [ ] Confirm Supabase Auth leaked-password protection is enabled: dashboard Auth security settings.
+- [ ] Leaked-password protection is not included on this organization's Free plan; if upgrading to Pro or above, enable it in Supabase Auth settings (see https://supabase.com/docs/guides/auth/password-security).
 - [ ] `npm ci` succeeds from a clean checkout and `npm run build` succeeds.
 - [ ] Test sign-up, confirmation, login, sign-out, password reset, and legal acceptance record on the deployed domain.
 - [ ] Test with two separate accounts that neither can read or modify the other's workspace, solutions, members, or images, including direct API requests.
@@ -41,7 +41,7 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 ## Free preview solution cap
 - [x] UI prevents creating an 11th solution in the Starter/free preview and directs the user to Plans.
 - [x] Database migration `20261013_free_preview_solution_limit.sql` enforces a 10-solution cap unless the workspace has an active Team or Business subscription.
-- [ ] Apply the migration to the intended Supabase project before deploying the UI; without the migration, the limit is only client-side.
+- [x] Database enforcement is active through the newer plan-based migration enforce_plan_solution_limits (Starter/Free limit: 10). The older free-preview-only migration is superseded.
 - [ ] Test 10 creates, rejection of the 11th, deletion followed by a successful replacement, edits at the cap, and active paid-plan exemption.
 - [ ] Before billing launches, connect verified subscription status to entitlements; checkout is currently a visual preview and does not activate paid plans.
 
@@ -49,7 +49,7 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [x] Source UI describes Starter 10, Team 500, and Business 2,500 included solutions.
 - [x] Business source UI estimates $0.05 per additional stored solution per month, without claiming a charge has occurred.
 - [x] Migration `20261013_plan_solution_limits.sql` enforces Starter and Team caps in the database and allows Business overage.
-- [ ] Apply the migration to the target Supabase project before deploying the UI.
+- [x] Applied migration enforce_plan_solution_limits to the production Supabase project; it enforces Starter 10 and Team 500 limits and permits Business overage without collecting fees.
 - [ ] Test Starter 10 / 11th rejected, Team 500 / 501st rejected, Business 2,500 / 2,501st allowed, and edits/deletions at each threshold.
 - [ ] Implement and test actual metered overage billing before charging Business customers; current checkout is a non-payment preview.
 
@@ -94,3 +94,17 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [x] Existing auto-generated workspace labels display using the owner's saved profile display name (or a capitalized email local-part fallback); custom workspace names are preserved.
 - [ ] Live production smoke test: open all three clean legal paths directly, confirm each correct document renders, and test the signup consent links.
 - [ ] Responsive visual check on dashboard metric cards and workspace picker in desktop and mobile widths.
+
+
+## Supabase access-control hardening — 2026-10-14
+
+- [x] Revoked broad table, sequence, and column grants from anon, authenticated, and PUBLIC across the app's public tables; granted only the client operations the app uses.
+- [x] Removed direct client write access to workspace membership rows; database triggers and the invitation Edge Function remain responsible for membership.
+- [x] Prevented clients from changing solution workspace IDs, workspace ownership, profile email, or account activity timestamps.
+- [x] Added an explicit deny-all RLS policy for server-only account inactivity notices and removed duplicate legal-acceptance read policy.
+- [x] Restricted default table/sequence/function grants for objects created by the postgres migration role; hardened record_user_activity() with an empty search path while keeping its intended authenticated RPC.
+- [x] Applied Starter/Team plan-limit enforcement in the database. Business overage remains a preview allowance only; do not bill until metered billing is implemented and tested.
+- [x] Removed the internal permissions-implementation note from the Team page UI.
+- [ ] Run two-account end-to-end tests of workspace isolation, member permission boundaries, image access, plan caps, sign-up, and account deletion against the deployed app.
+- [ ] Supabase Security Advisor still reports the intentionally authenticated SECURITY DEFINER activity RPC and that leaked-password protection is disabled. The RPC is constrained to updating only the caller's activity timestamp and has a locked search path; leaked-password protection needs Pro or above.
+- [ ] Check default privileges for any future objects created by Supabase-managed supabase_admin; the active migration role's defaults are locked down, but that managed role's defaults are controlled by Supabase.
