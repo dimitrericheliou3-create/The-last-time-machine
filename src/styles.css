@@ -2169,3 +2169,164 @@ body,.auth-shell,.loading-screen {
   color: #47658f;
   font-size: 10px;
 }
+
+
+/* Responsive details and theme tuning for the new dashboard composition. */
+.app-shell .nav-divider {
+  width: calc(100% - 14px);
+  border-top: 1px solid #e7ebf2;
+}
+.app-shell[data-theme="dark"] .workspace-picker-nav .workspace-nav-trigger:hover,
+.app-shell[data-theme="dark"] .workspace-picker-nav .workspace-nav-trigger.is-open {
+  background: #f3f6fc;
+  border-color: #e0e7f2;
+  color: #2d3a50;
+  box-shadow: none;
+}
+.app-shell[data-theme="dark"] .workspace-picker-nav .workspace-nav-trigger.active {
+  background: #edf2ff;
+  color: #355bc0;
+}
+.app-shell[data-theme="dark"] .workspace-picker-nav .workspace-nav-trigger svg {
+  color: #8793a7;
+}
+.app-shell[data-theme="dark"] .sidebar-bottom > .profile-row-button:hover,
+.app-shell[data-theme="dark"] .sidebar-bottom > .profile-row-button.active {
+  box-shadow: none;
+}
+.app-shell[data-theme="dark"] .dashboard-section-heading h2,
+.app-shell[data-theme="dark"] .dashboard-side-card > h2,
+.app-shell[data-theme="dark"] .dashboard-recent-empty strong {
+  color: #0c1d3f;
+}
+.app-shell[data-theme="dark"] .dashboard-category-pill:hover,
+.app-shell[data-theme="dark"] .dashboard-category-row:hover {
+  filter: brightness(.98);
+}
+@media (max-width: 1320px) {
+  .app-shell .dashboard-layout {
+    grid-template-columns: minmax(0,1fr) minmax(270px,315px);
+    gap: 19px;
+  }
+  .app-shell .dashboard-stats-grid {
+    gap: 11px;
+  }
+  .app-shell .dashboard-metric-card {
+    padding: 15px 13px;
+  }
+  .app-shell .dashboard-solution-row {
+    grid-template-columns: 44px minmax(0,1fr) auto 20px;
+    column-gap: 12px;
+    padding: 14px 15px;
+  }
+  .app-shell .dashboard-row-icon {
+    width: 44px;
+    height: 44px;
+  }
+}
+@media (max-width: 1120px) {
+  .app-shell .dashboard-layout {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .app-shell .dashboard-rail {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    align-items: stretch;
+  }
+  .app-shell .dashboard-quote-card,
+  .app-shell .dashboard-brand-card {
+    min-height: 190px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell .sidebar {
+    width: 270px;
+  }
+  .app-shell .dashboard-page-content {
+    padding: 20px 18px 28px;
+  }
+  .app-shell .dashboard-global-search {
+    width: 100%;
+    min-width: 0;
+    height: 39px;
+  }
+  .app-shell .topbar {
+    padding: 0 16px;
+    gap: 9px;
+  }
+  .app-shell .top-actions {
+    gap: 6px;
+    margin-left: 0;
+  }
+  .app-shell .dashboard-greeting {
+    min-height: 0;
+    margin-bottom: 22px;
+  }
+  .app-shell .dashboard-greeting h1 {
+    font-size: 27px;
+  }
+  .app-shell .dashboard-stats-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .app-shell .dashboard-metric-card {
+    min-height: 155px;
+    padding: 15px;
+  }
+  .app-shell .dashboard-metric-icon {
+    width: 39px;
+    height: 39px;
+    margin-bottom: 11px;
+  }
+  .app-shell .dashboard-rail {
+    gap: 15px;
+  }
+  .app-shell .dashboard-quote-card {
+    min-height: 170px;
+  }
+}
+@media (max-width: 540px) {
+  .app-shell .dashboard-rail {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .app-shell .dashboard-quote-card {
+    min-height: 180px;
+  }
+  .app-shell .dashboard-solution-row {
+    grid-template-columns: 42px minmax(0,1fr) 22px;
+    column-gap: 11px;
+    padding: 13px 12px;
+  }
+  .app-shell .dashboard-row-icon {
+    width: 42px;
+    height: 42px;
+  }
+  .app-shell .dashboard-row-time {
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: 5px;
+    font-size: 9px;
+  }
+  .app-shell .dashboard-row-more {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: start;
+  }
+  .app-shell .dashboard-row-content {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+  .app-shell .dashboard-row-content p {
+    -webkit-line-clamp: 2;
+  }
+  .app-shell .dashboard-section-heading {
+    padding: 0 2px;
+  }
+  .app-shell .dashboard-section-heading h2 {
+    font-size: 17px;
+  }
+  .app-shell .dashboard-global-search kbd {
+    display: none;
+  }
+}
