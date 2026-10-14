@@ -68,3 +68,11 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [ ] Only after testing reminders and reviewing dry-run results, explicitly switch the scheduler body to `{"dry_run":false}`.
 - [ ] Test deletion against a disposable account with a sole-member workspace; verify image cleanup and deletion. Test separately that a shared-workspace owner and an account with an active/past-due subscription are protected.
 - [ ] Monitor the scheduled function and logs. Auth, database, and storage cleanup span multiple services and are not one atomic transaction.
+
+## UI audit follow-up — search counter, empty state, and footer
+- [x] Make the result counter render a complete singular/plural label (1 result, 0 results, 2 results).
+- [x] On a genuinely empty workspace, show one primary “Add your first solution” action; hide duplicate header and sidebar creation actions.
+- [x] When a query or category filter has no matches, show “Clear search and filters” instead of another create button.
+- [x] Group main-footer links in a labeled navigation element, separate the tagline, and give the footer a responsive layout.
+- [x] Wrap legal-page links in a labeled navigation element.
+- [ ] Verify the deployed UI visually at desktop, tablet, and narrow mobile widths; test empty workspace, filtered no-results, focus states, and legal links after deployment.
