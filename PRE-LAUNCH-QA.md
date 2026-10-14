@@ -60,6 +60,8 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [x] Deploy `account-inactivity-sweep` with custom bearer-secret checks and dry-run-by-default behavior.
 - [x] Add reminder history and Terms/Privacy copy for an eight-month inactivity window.
 - [x] Protect accounts that own workspaces with other members or active/past-due subscriptions; preserve shared-workspace solution content for remaining members.
+- [x] Require the final inactivity warning to be recorded at least seven full days before deletion; a missing/invalid timestamp or warning-history write failure fails closed. Edge Function deployed as version 2.
+- [ ] Test the seven-day gate using a disposable account or test fixtures: missing warning sends notice but never deletes; a warning less than seven days old is held; a warning at least seven days old may proceed only after workspace/subscription protection checks; invalid timestamp must be held.
 - [ ] Configure `INACTIVITY_CRON_SECRET`, `RESEND_API_KEY`, and a verified `INACTIVITY_FROM_EMAIL` in Supabase Edge Function secrets.
 - [ ] Configure a daily scheduler that calls `POST /functions/v1/account-inactivity-sweep` with the bearer secret and `{"dry_run":true}`; review logs/results for at least several runs.
 - [ ] Verify all three notices arrive at 30, 15, and 7 days before the eight-month deadline; confirm sign-in resets the timer.
