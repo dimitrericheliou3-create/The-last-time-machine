@@ -110,7 +110,7 @@ Deno.serve(async (req: Request) => {
     .limit(500);
   if (profileError) return response({ error: "Could not load inactivity candidates." }, 500);
 
-  const report = { dry_run: dryRun, scanned: profiles?.length || 0, notices_sent: 0, protected: 0, deleted: 0, candidates: [] as string[] };
+  const report = { dry_run: dryRun, scanned: profiles?.length || 0, notices_sent: 0, protected: 0, waiting_for_final_warning: 0, deleted: 0, candidates: [] as string[] };
 
   for (const profile of profiles || []) {
     const userId = profile.user_id as string;
@@ -143,14 +143,31 @@ Deno.serve(async (req: Request) => {
 
     // The account must have received the final warning at least seven days before deletion.
     const { data: finalNotice, error: finalNoticeError } = await admin.from("account_inactivity_notices")
-      .select("user_id").eq("user_id", userId).eq("notice_stage", "warning_7d").maybeSingle();
+      .select("user_id,sent_at").eq("user_id", userId).eq("notice_stage", "warning_7d").maybeSingle();
     if (finalNoticeError) return response({ error: "Could not check final warning status." }, 500);
+
     if (!finalNotice) {
       if (!email) { report.protected++; continue; }
+      // Send and record the final warning, then always stop this run. If recording fails,
+      // fail closed: a later run may retry the notice, but this account cannot be deleted.
       await sendNotice({ apiKey: resendKey, from: fromEmail, to: email, name: profile.display_name || "", stage: "warning_7d", lastActiveAt, appUrl });
-      const { error } = await admin.from("account_inactivity_notices").insert({ user_id: userId, notice_stage: "warning_7d" });
-      if (error) console.error("Could not save final warning history", error.message);
+      const { error: noticeInsertError } = await admin.from("account_inactivity_notices")
+        .insert({ user_id: userId, notice_stage: "warning_7d" });
+      if (noticeInsertError) {
+        console.error("Could not save final warning history", noticeInsertError.message);
+        return response({ error: "Could not record final warning delivery; the account was not deleted." }, 500);
+      }
       report.notices_sent++;
+      report.waiting_for_final_warning++;
+      continue;
+    }
+
+    // Never delete until at least seven full days after the final warning was recorded.
+    // Missing/invalid timestamps fail closed and require investigation.
+    const finalNoticeSentAt = Date.parse(finalNotice.sent_at || "");
+    const minimumFinalNoticeWaitMs = 7 * 24 * 60 * 60 * 1000;
+    if (!Number.isFinite(finalNoticeSentAt) || Date.now() - finalNoticeSentAt < minimumFinalNoticeWaitMs) {
+      report.waiting_for_final_warning++;
       continue;
     }
 
