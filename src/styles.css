@@ -440,3 +440,17 @@ button:disabled{filter:saturate(.5)}
 
 .member-profile-handle{color:#8fb2ff!important;font-size:10px!important}
 .member-profile-bio{color:#91a2bb!important;font-size:10px!important;line-height:1.6!important;white-space:pre-wrap;overflow-wrap:anywhere}
+
+
+/* Member permissions stay collapsed until the owner opens a member */
+.member-name-button{display:flex;align-items:center;gap:7px;max-width:100%;padding:0;border:0;background:transparent;text-align:left;color:#e7eefb;font-size:13px;font-weight:750;line-height:1.4}
+.member-name-button>span{min-width:0;overflow-wrap:anywhere}
+.member-name-button>svg{flex:0 0 auto;color:#7f93b2;transition:transform .22s ease,color .22s ease}
+.member-name-button:hover,.member-name-button.expanded{color:#9dbaff}
+.member-name-button.expanded>svg{transform:rotate(180deg);color:#9dbaff}
+.member-name-button:focus-visible,.member-handle-button:focus-visible{outline:2px solid #90b2ff;outline-offset:3px;border-radius:4px}
+.member-profile-handle{margin-top:4px!important}
+.member-handle-button{padding:0;border:0;background:transparent;color:#8fb2ff;font-size:10px;font-weight:600;text-align:left}
+.member-handle-button:hover{color:#c0d2ff;text-decoration:underline;text-underline-offset:3px}
+.member-permissions-dropdown{margin-top:13px;padding:2px 12px 12px;border:1px solid #2c4263;border-radius:11px;background:linear-gradient(135deg,rgba(31,52,83,.72),rgba(14,25,41,.92));box-shadow:0 10px 26px rgba(0,0,0,.12);animation:expandIn .25s var(--ease-out) both}
+.member-permissions-dropdown .member-permissions{border-top:0;margin-top:0;padding-top:10px}
