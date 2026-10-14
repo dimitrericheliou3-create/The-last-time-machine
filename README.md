@@ -6,6 +6,7 @@ A React + Vite web app for recording and searching business troubleshooting know
 
 - Email/password account creation and sign-in through Supabase Auth
 - Creates a private workspace; the database trigger creates the owner membership
+- Five account-level color schemes (Dark, Midnight, Forest, Plum, and Light); Dark remains the default and the selected scheme is saved to the signed-in profile
 - Workspace picker lists all workspaces for the signed-in account and can create/switch workspaces without requiring a second account
 - Account profile page with display name, unique optional username, short bio, and private profile picture; teammate handles and pictures are visible only inside shared workspaces
 - Lists saved solutions from Supabase
@@ -73,7 +74,9 @@ Save failures now remain visible inside the solution form instead of only appear
 - AI-assisted answers are not active yet; do not market this feature as available until a grounded retrieval workflow and safeguards are implemented.
 
 
-## Workspace and profile migrations
+## Workspace, profile, and appearance migrations
+
+The account color scheme preference adds `profiles.theme_key` with a database default of `dark`; accepted values are `dark`, `midnight`, `forest`, `plum`, and `light`. The app changes colors through CSS and stores one small text preference per profile—no theme images, font packs, or extra runtime library are loaded.
 
 The current Supabase project already has the workspace-creation policy and owner-membership trigger, and the profile/avatar changes have been applied. When setting up another Supabase project, review and apply the migrations for your intended deployment, including:
 
