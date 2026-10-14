@@ -485,7 +485,7 @@ button:disabled{filter:saturate(.5)}
 .app-shell[data-theme="light"]{
   --theme-bg:#f7f5ef;--theme-sidebar:#fdfbf6;--theme-panel:#fffdf8;--theme-card:#fffdf8;
   --theme-header:rgba(253,251,246,.95);--theme-border:#e4dfd3;--theme-text:#252a35;--theme-muted:#6e6b63;
-  --theme-accent:#78866d;--theme-accent-strong:#59694f;--theme-accent-soft:#eeeddf;--theme-input:#fbfaf5;--theme-success:#187e5b;
+  --theme-accent:#59694f;--theme-accent-strong:#43513d;--theme-accent-soft:#eeeddf;--theme-input:#fbfaf5;--theme-success:#187e5b;
 }
 .app-shell[data-theme="midnight"],.app-shell[data-theme="forest"],.app-shell[data-theme="plum"],.app-shell[data-theme="light"]{
   background:var(--theme-bg);color:var(--theme-text);transition:background-color .22s ease,color .22s ease
@@ -785,4 +785,13 @@ button:disabled{filter:saturate(.5)}
 }
 .app-shell[data-theme="light"] .theme-preview-light .theme-preview-main i:first-child {
   background:#dfe4d4;
+}
+
+
+/* Light-theme status text contrast */
+.app-shell[data-theme="light"] .theme-status {
+  color:var(--theme-muted)!important;
+}
+.app-shell[data-theme="light"] .theme-status-success {
+  color:var(--theme-success)!important;
 }
