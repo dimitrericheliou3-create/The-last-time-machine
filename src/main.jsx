@@ -755,7 +755,6 @@ function App() {
       </nav>
       <div className="sidebar-bottom">
         <div className="help-card"><div className="help-icon"><Lightbulb size={17}/></div><strong>Knowledge that sticks.</strong><p>Capture a fix today. Save your team time tomorrow.</p><button onClick={()=>{setSaveError('');setModal({kind:'new'});}}>Add your first fix <ArrowRight size={14}/></button></div>
-        <button className={`nav-item ${activeNav==='Profile'?'active':''}`} onClick={()=>{setActiveNav('Profile');setMobileNav(false);}}><UserRound size={18}/><span>Profile</span></button>
         <button className={`nav-item ${activeNav==='Settings'?'active':''}`} onClick={()=>{setActiveNav('Settings');setWorkspaceName(workspace?.name||'');setSettingsMessage('');setSettingsError('');setMobileNav(false);}}><Settings size={18}/><span>Settings</span></button>
         <button
           type="button"
