@@ -2709,3 +2709,92 @@ body,.auth-shell,.loading-screen {
 .auth-shell .legal-consent a {
   color: #527396;
 }
+
+
+/* Final accent pass: soften secondary icon colours and remaining focus/heading blues. */
+:root {
+  --blue: #597a9d;
+  --blue2: #3f6288;
+}
+.app-shell[data-theme="dark"] .welcome-copy h2 span {
+  color: #58799b;
+}
+.app-shell[data-theme="dark"] .dashboard-metric-icon.metric-green,
+.app-shell[data-theme="dark"] .dashboard-row-icon.tone-green,
+.app-shell[data-theme="dark"] .dashboard-quick-icon.tone-green,
+.app-shell[data-theme="dark"] .dashboard-category-row-icon.tone-green,
+.app-shell[data-theme="dark"] .stat-icon.green,
+.app-shell[data-theme="dark"] .category-icon.green {
+  background: #e7f3ef;
+  color: #3e8b78;
+}
+.app-shell[data-theme="dark"] .dashboard-category-pill.tone-green,
+.app-shell[data-theme="dark"] .dashboard-category-count.tone-green {
+  background: #e7f3ef;
+  color: #3e8070;
+}
+.app-shell[data-theme="dark"] .dashboard-metric-icon.metric-purple,
+.app-shell[data-theme="dark"] .dashboard-row-icon.tone-violet,
+.app-shell[data-theme="dark"] .dashboard-quick-icon.tone-violet,
+.app-shell[data-theme="dark"] .dashboard-category-row-icon.tone-violet,
+.app-shell[data-theme="dark"] .stat-icon.violet,
+.app-shell[data-theme="dark"] .category-icon.violet {
+  background: #f0edf8;
+  color: #7d70a9;
+}
+.app-shell[data-theme="dark"] .dashboard-category-pill.tone-violet,
+.app-shell[data-theme="dark"] .dashboard-category-count.tone-violet {
+  background: #f0edf8;
+  color: #78699f;
+}
+.app-shell[data-theme="dark"] .dashboard-metric-icon.metric-orange,
+.app-shell[data-theme="dark"] .dashboard-row-icon.tone-orange,
+.app-shell[data-theme="dark"] .dashboard-quick-icon.tone-orange,
+.app-shell[data-theme="dark"] .dashboard-category-row-icon.tone-orange,
+.app-shell[data-theme="dark"] .category-icon.amber {
+  background: #fbf0e5;
+  color: #b77c45;
+}
+.app-shell[data-theme="dark"] .dashboard-category-pill.tone-orange,
+.app-shell[data-theme="dark"] .dashboard-category-count.tone-orange {
+  background: #fbf0e5;
+  color: #a96f3c;
+}
+.app-shell[data-theme="dark"] .dashboard-row-icon.tone-teal,
+.app-shell[data-theme="dark"] .dashboard-quick-icon.tone-teal,
+.app-shell[data-theme="dark"] .dashboard-category-row-icon.tone-teal {
+  background: #e8f3f3;
+  color: #4e8589;
+}
+.app-shell[data-theme="dark"] .dashboard-category-pill.tone-teal,
+.app-shell[data-theme="dark"] .dashboard-category-count.tone-teal {
+  background: #e8f3f3;
+  color: #477c80;
+}
+.app-shell[data-theme="dark"] .search-field:focus-within,
+.app-shell[data-theme="dark"] .select-wrap:focus-within,
+.app-shell[data-theme="dark"] .solution-form input:focus,
+.app-shell[data-theme="dark"] .solution-form textarea:focus,
+.app-shell[data-theme="dark"] .solution-form select:focus,
+.app-shell[data-theme="dark"] .profile-form input:focus,
+.app-shell[data-theme="dark"] .profile-form textarea:focus,
+.app-shell[data-theme="dark"] .auth-input:focus-within {
+  border-color: #a9bacd;
+  box-shadow: 0 0 0 3px rgba(82,111,145,.10);
+}
+.app-shell[data-theme="dark"] .welcome-clock {
+  background: linear-gradient(145deg,#7896b4,#527596);
+}
+.auth-shell .auth-input:focus-within {
+  border-color: #a9bacd;
+  box-shadow: 0 0 0 3px rgba(82,111,145,.10);
+}
+.auth-shell .auth-hero h1 span,
+.auth-shell .auth-overline,
+.auth-shell .auth-switch button,
+.auth-shell .auth-legal a,
+.auth-shell .legal-consent a,
+.legal-footer a:hover,
+.footer-legal a:hover {
+  color: #527396;
+}
