@@ -67,9 +67,10 @@ async function sendNotice(args: {
 }
 
 function escapeHtml(input: string): string {
-  return input.replace(/[&<>"']/g, (char) => ({
+  const entities: Record<string, string> = {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[char] || char));
+  };
+  return input.replace(/[&<>"']/g, (char) => entities[char] || char);
 }
 
 Deno.serve(async (req: Request) => {
