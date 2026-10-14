@@ -631,8 +631,6 @@ function TeamPage({workspace,session,notify}) {
   </>;
 }
 
-}
-
 function PlansPage({notify}) {
   const [billingCycle,setBillingCycle] = useState('monthly');
   const [checkoutPlan,setCheckoutPlan] = useState(null);
