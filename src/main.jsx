@@ -84,7 +84,7 @@ function App() {
 
   useEffect(() => {
     const themeColors = {
-      dark: '#0b1220',
+      dark: '#f5f7fb',
       midnight: '#081321',
       forest: '#0a1712',
       plum: '#110d1b',
