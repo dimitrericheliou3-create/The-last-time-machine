@@ -877,3 +877,9 @@ button:disabled{filter:saturate(.5)}
     white-space:normal;
   }
 }
+
+/* Dashboard metrics are informational cards, not navigation controls. */
+.stat-card { cursor: default; }
+.stat-card:hover { transform: none; box-shadow: none; }
+.stat-card:hover::after { transform: translateX(-120%); }
+.stat-card:hover .stat-icon { transform: none; filter: none; }
