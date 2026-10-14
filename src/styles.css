@@ -454,3 +454,13 @@ button:disabled{filter:saturate(.5)}
 .member-handle-button:hover{color:#c0d2ff;text-decoration:underline;text-underline-offset:3px}
 .member-permissions-dropdown{margin-top:13px;padding:2px 12px 12px;border:1px solid #2c4263;border-radius:11px;background:linear-gradient(135deg,rgba(31,52,83,.72),rgba(14,25,41,.92));box-shadow:0 10px 26px rgba(0,0,0,.12);animation:expandIn .25s var(--ease-out) both}
 .member-permissions-dropdown .member-permissions{border-top:0;margin-top:0;padding-top:10px}
+
+
+/* The account row and top avatar both navigate to Profile; sign-out stays in Settings */
+.profile-row-button{width:100%;border:1px solid transparent;border-top:1px solid #1f2c40;border-radius:9px;background:transparent;color:inherit;text-align:left;cursor:pointer;transition:background .2s ease,border-color .2s ease,transform .2s ease}
+.profile-row-button:hover,.profile-row-button.active{background:#132139;border-color:#263a56}
+.profile-row-button:focus-visible,.top-avatar-button:focus-visible{outline:2px solid #90b2ff;outline-offset:3px;box-shadow:0 0 0 5px rgba(91,140,255,.12)}
+.profile-row-button .profile-info{min-width:0;flex:1}
+.profile-row-button .profile-avatar{overflow:hidden;flex:0 0 auto}
+.profile-row-button .profile-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.top-avatar-button.active{box-shadow:0 0 0 3px rgba(91,140,255,.35)}
