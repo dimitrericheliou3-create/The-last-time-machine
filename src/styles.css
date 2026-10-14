@@ -485,7 +485,7 @@ button:disabled{filter:saturate(.5)}
 .app-shell[data-theme="light"]{
   --theme-bg:#f7f5ef;--theme-sidebar:#fdfbf6;--theme-panel:#fffdf8;--theme-card:#fffdf8;
   --theme-header:rgba(253,251,246,.95);--theme-border:#e4dfd3;--theme-text:#252a35;--theme-muted:#6e6b63;
-  --theme-accent:#496fe8;--theme-accent-strong:#3158cb;--theme-accent-soft:#eeeddf;--theme-input:#fbfaf5;--theme-success:#187e5b;
+  --theme-accent:#78866d;--theme-accent-strong:#59694f;--theme-accent-soft:#eeeddf;--theme-input:#fbfaf5;--theme-success:#187e5b;
 }
 .app-shell[data-theme="midnight"],.app-shell[data-theme="forest"],.app-shell[data-theme="plum"],.app-shell[data-theme="light"]{
   background:var(--theme-bg);color:var(--theme-text);transition:background-color .22s ease,color .22s ease
@@ -745,6 +745,40 @@ button:disabled{filter:saturate(.5)}
 .app-shell[data-theme="light"] .stat-spark,
 .app-shell[data-theme="light"] .banner-sparkle {
   color:#a5ad90;
+}
+.app-shell[data-theme="light"] .profile-preview-cover {
+  background:radial-gradient(ellipse at 70% 10%,#a5ad9038 0,transparent 55%),linear-gradient(125deg,#eeeae0,#fffdf8);
+}
+.app-shell[data-theme="light"] .theme-preview-light .theme-preview-main i:first-child {
+  background:#dfe4d4;
+}
+
+
+/* Light theme finishing pass: keep the appearance picker and accents in the warm palette */
+.app-shell[data-theme="light"] .appearance-panel {
+  background:var(--theme-panel)!important;
+  border-color:var(--theme-border);
+  box-shadow:0 8px 26px rgba(76,79,61,.05);
+}
+.app-shell[data-theme="light"] .theme-preset {
+  background:#fffdf8;
+  border-color:#e4dfd3;
+  color:var(--theme-text);
+  box-shadow:none;
+}
+.app-shell[data-theme="light"] .theme-preset:hover:not(:disabled) {
+  border-color:#b7c0a9;
+  box-shadow:0 7px 18px rgba(76,89,61,.09);
+}
+.app-shell[data-theme="light"] .theme-preset.selected {
+  border-color:#9aa78a;
+  background:#f1f0e7;
+  box-shadow:0 0 0 2px rgba(120,134,109,.15);
+}
+.app-shell[data-theme="light"] .theme-preset-check {
+  background:#78866d;
+  border-color:#78866d;
+  color:#fffdf8;
 }
 .app-shell[data-theme="light"] .profile-preview-cover {
   background:radial-gradient(ellipse at 70% 10%,#a5ad9038 0,transparent 55%),linear-gradient(125deg,#eeeae0,#fffdf8);
