@@ -1475,7 +1475,7 @@ function SettingsPage({workspace,canRenameWorkspace,workspaceName,setWorkspaceNa
     {key:'light',name:'Warm Light',description:'Soft cream surfaces with sage accents',swatches:['#f7f5ef','#fffdf8','#59694f']}
   ];
   return <><div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> PREFERENCES</div><h1>Settings</h1><p className="page-subtitle">Manage your workspace, appearance, and account.</p></div></div>
-    <div className="settings-page-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:18,marginTop:24}}>
+    <div className="settings-page-grid" style={{display:'grid',gap:18,marginTop:24}}>
       <section className="team-placeholder appearance-panel" style={{textAlign:'left',alignItems:'stretch'}}>
         <div className="eyebrow">APPEARANCE</div><h2 style={{marginTop:10}}>Color scheme</h2><p>Choose the colours you prefer. This setting follows your account across your workspaces and devices.</p>
         <div className="theme-preset-grid" role="group" aria-label="Color scheme presets">
