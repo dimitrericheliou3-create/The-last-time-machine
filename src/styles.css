@@ -483,9 +483,9 @@ button:disabled{filter:saturate(.5)}
   --theme-accent:#b6a0ff;--theme-accent-strong:#8166d9;--theme-accent-soft:#322449;--theme-input:#171020;--theme-success:#8fe0c2;--theme-button-text:#20102a;
 }
 .app-shell[data-theme="light"]{
-  --theme-bg:#f3f6fc;--theme-sidebar:#ffffff;--theme-panel:#ffffff;--theme-card:#ffffff;
-  --theme-header:rgba(255,255,255,.94);--theme-border:#dbe3f0;--theme-text:#18243a;--theme-muted:#63718a;
-  --theme-accent:#496fe8;--theme-accent-strong:#3158cb;--theme-accent-soft:#e8efff;--theme-input:#f8faff;--theme-success:#187e5b;
+  --theme-bg:#f7f5ef;--theme-sidebar:#fdfbf6;--theme-panel:#fffdf8;--theme-card:#fffdf8;
+  --theme-header:rgba(253,251,246,.95);--theme-border:#e4dfd3;--theme-text:#252a35;--theme-muted:#6e6b63;
+  --theme-accent:#496fe8;--theme-accent-strong:#3158cb;--theme-accent-soft:#eeeddf;--theme-input:#fbfaf5;--theme-success:#187e5b;
 }
 .app-shell[data-theme="midnight"],.app-shell[data-theme="forest"],.app-shell[data-theme="plum"],.app-shell[data-theme="light"]{
   background:var(--theme-bg);color:var(--theme-text);transition:background-color .22s ease,color .22s ease
@@ -660,9 +660,9 @@ button:disabled{filter:saturate(.5)}
 .app-shell[data-theme="light"] .profile-username-field input{color:var(--theme-text)}
 .app-shell[data-theme="light"] .member-permissions-dropdown{background:var(--theme-card);border-color:var(--theme-border)}
 .app-shell[data-theme="light"] .permission-option,.app-shell[data-theme="light"] .permission-panel-heading{color:var(--theme-text)}
-.app-shell[data-theme="light"] .profile-preview-cover{background:radial-gradient(ellipse at 70% 10%,#496fe85c 0,transparent 55%),linear-gradient(125deg,#e5ecfc,#f7f9ff)}
-.app-shell[data-theme="light"] .theme-preview-light .theme-preview-sidebar{background:#e4eafb}
-.app-shell[data-theme="light"] .theme-preview-light .theme-preview-main{background:#fff}
+.app-shell[data-theme="light"] .profile-preview-cover{background:radial-gradient(ellipse at 70% 10%,#496fe83d 0,transparent 55%),linear-gradient(125deg,#eeeae0,#fffdf8)}
+.app-shell[data-theme="light"] .theme-preview-light .theme-preview-sidebar{background:#eeeae0}
+.app-shell[data-theme="light"] .theme-preview-light .theme-preview-main{background:#fffdf8}
 .app-shell[data-theme="light"] .profile-editor-panel,.app-shell[data-theme="light"] .profile-preview-panel{box-shadow:0 8px 26px rgba(33,55,92,.06)}
 
 /* Settings color-scheme picker */
@@ -694,9 +694,9 @@ button:disabled{filter:saturate(.5)}
 .theme-preview-plum .theme-preview-sidebar{background:#130e20}
 .theme-preview-plum .theme-preview-main i{background:#251c38}
 .theme-preview-plum .theme-preview-main i:first-child{background:#503879}
-.theme-preview-light{background:#f3f6fc;border-color:#dbe3f0}
-.theme-preview-light .theme-preview-sidebar{background:#e4eafb;border-color:#dbe3f0}
-.theme-preview-light .theme-preview-main i{background:#e9eef8}
+.theme-preview-light{background:#f7f5ef;border-color:#e4dfd3}
+.theme-preview-light .theme-preview-sidebar{background:#eeeae0;border-color:#e4dfd3}
+.theme-preview-light .theme-preview-main i{background:#f0ede5}
 .theme-preview-light .theme-preview-main i:first-child{background:#cddaff}
 .theme-preset-copy{display:grid;gap:4px;min-width:0}
 .theme-preset-copy strong{font-size:11px;font-weight:750}
