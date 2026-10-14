@@ -18,6 +18,8 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [ ] `npm ci` succeeds from a clean checkout and `npm run build` succeeds.
 - [ ] Test sign-up, confirmation, login, sign-out, password reset, and legal acceptance record on the deployed domain.
 - [ ] Test with two separate accounts that neither can read or modify the other's workspace, solutions, members, or images, including direct API requests.
+- [ ] Test creating multiple workspaces on one account, switching between them, refreshing, and confirming each workspace's solutions and permissions remain isolated.
+- [ ] Test profile display name, unique username conflicts, bio, avatar upload/removal, signed URL expiry, and that avatar/profile details are only visible to members of shared workspaces.
 - [ ] Test account deletion in a disposable test project: owned workspace with one member; shared workspace membership; image cleanup; workspace with other members (must safely refuse); database errors/retry.
 - [ ] Test invitation authorization, matching verified email, expiry, reuse, and cross-workspace isolation. Automated invitation email delivery is not configured; current flow opens a mail-app draft.
 - [ ] Test image upload/replacement/deletion and private signed URL expiry.
