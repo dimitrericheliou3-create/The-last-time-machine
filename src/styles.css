@@ -211,7 +211,7 @@ button:disabled{filter:saturate(.5)}
   transition:transform .22s var(--ease-out),border-color .28s ease,box-shadow .3s ease,background .3s ease;
   animation:rise .55s var(--ease-out) both;
 }
-.solution-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;opacity:0;background:radial-gradient(300px circle at var(--pointer-x) var(--pointer-y),rgba(116,160,255,.15),transparent 72%);transition:opacity .28s ease}
+.solution-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;opacity:0;background:radial-gradient(300px circle at var(--pointer-x) var(--pointer-y),rgba(116,160,255,.15),transparent 72%);transition:opacity .28s ease}
 .solution-card::after{content:"";position:absolute;top:-80%;left:-60%;width:44%;height:260%;pointer-events:none;opacity:0;transform:rotate(24deg) translateX(-80%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.055),transparent);transition:transform .8s var(--ease-out),opacity .25s ease}
 .solution-card:hover{transform:translateY(-5px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));border-color:#4c6a9e;box-shadow:0 18px 45px rgba(0,0,0,.20),0 0 0 1px rgba(99,145,245,.05)}
 .solution-card:hover::before{opacity:1}
