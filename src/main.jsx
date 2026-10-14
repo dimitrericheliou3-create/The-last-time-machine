@@ -757,16 +757,20 @@ function App() {
         <div className="help-card"><div className="help-icon"><Lightbulb size={17}/></div><strong>Knowledge that sticks.</strong><p>Capture a fix today. Save your team time tomorrow.</p><button onClick={()=>{setSaveError('');setModal({kind:'new'});}}>Add your first fix <ArrowRight size={14}/></button></div>
         <button className={`nav-item ${activeNav==='Profile'?'active':''}`} onClick={()=>{setActiveNav('Profile');setMobileNav(false);}}><UserRound size={18}/><span>Profile</span></button>
         <button className={`nav-item ${activeNav==='Settings'?'active':''}`} onClick={()=>{setActiveNav('Settings');setWorkspaceName(workspace?.name||'');setSettingsMessage('');setSettingsError('');setMobileNav(false);}}><Settings size={18}/><span>Settings</span></button>
-        <div className="profile-row">
-          <div className="profile-avatar">{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:(profile?.display_name||session.user.email||'U').slice(0,1).toUpperCase()}</div>
-          <div className="profile-info"><strong>{profile?.display_name||session.user.email?.split('@')[0]}</strong><span>{profile?.username?'@'+profile.username:session.user.email}</span></div>
-          <button className="icon-btn" title="Sign out" onClick={signOut}><LogOut size={17}/></button>
-        </div>
+        <button
+          type="button"
+          className={`profile-row profile-row-button ${activeNav==='Profile'?'active':''}`}
+          onClick={()=>{setActiveNav('Profile');setMobileNav(false);}}
+          aria-label="Open your profile"
+        >
+          <span className="profile-avatar">{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:(profile?.display_name||session.user.email||'U').slice(0,1).toUpperCase()}</span>
+          <span className="profile-info"><strong>{profile?.display_name||session.user.email?.split('@')[0]}</strong><span>{profile?.username?'@'+profile.username:session.user.email}</span></span>
+        </button>
       </div>
     </aside>
     {mobileNav&&<div className="scrim" onClick={()=>setMobileNav(false)} />}
     <main className="main-area">
-      <header className="topbar"><button className="icon-btn mobile-menu" onClick={()=>setMobileNav(true)}><Menu size={20}/></button><div className="crumb">Workspace <span>/</span> <strong>{activeNav}</strong></div><div className="top-actions"><div className="secure-pill"><ShieldCheck size={15}/> Private workspace</div><button type="button" className="top-avatar top-avatar-button" aria-label="Open profile" onClick={()=>setActiveNav('Profile')}>{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:(profile?.display_name||session.user.email||'U').slice(0,1).toUpperCase()}</button></div></header>
+      <header className="topbar"><button className="icon-btn mobile-menu" onClick={()=>setMobileNav(true)}><Menu size={20}/></button><div className="crumb">Workspace <span>/</span> <strong>{activeNav}</strong></div><div className="top-actions"><div className="secure-pill"><ShieldCheck size={15}/> Private workspace</div><button type="button" className={`top-avatar top-avatar-button ${activeNav==='Profile'?'active':''}`} aria-label="Open profile" onClick={()=>{setActiveNav('Profile');setMobileNav(false);}}>{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:(profile?.display_name||session.user.email||'U').slice(0,1).toUpperCase()}</button></div></header>
       <div className="page-content">
         {authError && <div className="form-error" role="alert" style={{marginBottom:16,display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}><span>{authError}</span><button type="button" className="icon-btn" aria-label="Dismiss error" onClick={()=>setAuthError('')}><X size={16}/></button></div>}
         {activeNav==='Dashboard' ? <Dashboard solutions={solutions} onNew={()=>setModal({kind:'new'})} onBrowse={()=>setActiveNav('Solutions')} onOpenSolution={s=>{setSelected(s);setModal({kind:'view'});}} onEditSolution={s=>{setSelected(s);setModal({kind:'edit'});}} onDeleteSolution={deleteSolution} canCreate={canCreateSolution} canEdit={canEditSolution} canDelete={canDeleteSolution}/> :
