@@ -2416,3 +2416,15 @@ body,.auth-shell,.loading-screen {
     width: 100%;
   }
 }
+
+
+/* Small finishing touches to mirror the supplied reference more closely. */
+.app-shell[data-theme="dark"] .brand-name small {
+  display: none;
+}
+.app-shell[data-theme="dark"] .dashboard-greeting p {
+  color: #60769a;
+}
+.app-shell .dashboard-quote-card {
+  background-color: #7898ad;
+}
