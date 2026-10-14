@@ -84,3 +84,13 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [x] Signup instructions now tell the user that confirming the email will open the workspace automatically.
 - [ ] End-to-end test with a new disposable account: submit signup, open the email confirmation link, confirm the browser returns to the deployed app already signed in, and verify the new private workspace loads.
 - [ ] In Supabase Authentication → URL Configuration, verify the deployed app origin is an allowed Redirect URL (and set the correct Site URL). If a custom domain is used, allow-list that domain as well.
+
+## Dashboard UI audit follow-up — legal routes, metric affordances, and naming
+
+- [x] Legal links now use clean app routes: `/terms`, `/privacy`, and `/acceptable-use`; the app continues to accept the older `?legal=...` URLs for compatibility.
+- [x] Signup consent, auth footer, dashboard footer, and legal-page footer use the clean legal routes.
+- [x] Static metrics no longer show the extra activity/action glyph or move/shine on hover, avoiding a false clickable affordance.
+- [x] Newly generated default workspace names capitalize the email local-part's first character.
+- [x] Existing auto-generated workspace labels display using the owner's saved profile display name (or a capitalized email local-part fallback); custom workspace names are preserved.
+- [ ] Live production smoke test: open all three clean legal paths directly, confirm each correct document renders, and test the signup consent links.
+- [ ] Responsive visual check on dashboard metric cards and workspace picker in desktop and mobile widths.
