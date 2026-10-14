@@ -52,6 +52,7 @@ function App() {
   const [workspace, setWorkspace] = useState(null);
   const [hasPaidPlan, setHasPaidPlan] = useState(false);
   const [activePlanKey, setActivePlanKey] = useState('starter');
+  const [myWorkspacePermissions, setMyWorkspacePermissions] = useState({can_create_solutions:false, can_edit_solutions:false, can_delete_solutions:false});
   const [solutions, setSolutions] = useState(demoSolutions);
   const [loadingData, setLoadingData] = useState(false);
   const [query, setQuery] = useState('');
@@ -92,7 +93,7 @@ function App() {
     if (token) setInviteToken(token);
   }, [session]);
 
-  useEffect(() => { if (session?.user && !inviteToken) loadWorkspace(session.user); else if (!session) { setWorkspace(null); setSolutions(demoSolutions); } }, [session, inviteToken]);
+  useEffect(() => { if (session?.user && !inviteToken) loadWorkspace(session.user); else if (!session) { setWorkspace(null); setSolutions(demoSolutions); setMyWorkspacePermissions({can_create_solutions:false, can_edit_solutions:false, can_delete_solutions:false}); } }, [session, inviteToken]);
 
   async function acceptWorkspaceInvite() {
     if (!supabase || !session?.user || !inviteToken) return;
@@ -145,6 +146,19 @@ function App() {
       }
       setWorkspace(current);
       setWorkspaceName(current.name || '');
+      if (current.owner_id === user.id) {
+        setMyWorkspacePermissions({can_create_solutions:true, can_edit_solutions:true, can_delete_solutions:true});
+      } else {
+        const {data: permissionRow, error: permissionError} = await supabase.from('workspace_member_permissions')
+          .select('can_create_solutions,can_edit_solutions,can_delete_solutions')
+          .eq('workspace_id', current.id).eq('user_id', user.id).maybeSingle();
+        if (permissionError) throw permissionError;
+        setMyWorkspacePermissions({
+          can_create_solutions: !!permissionRow?.can_create_solutions,
+          can_edit_solutions: !!permissionRow?.can_edit_solutions,
+          can_delete_solutions: !!permissionRow?.can_delete_solutions
+        });
+      }
       const { data: subscriptionRow } = await supabase.from('workspace_subscriptions').select('plan_key,status').eq('workspace_id', current.id).maybeSingle();
       const activePlan = subscriptionRow?.status === 'active' ? subscriptionRow.plan_key : 'starter';
       setActivePlanKey(activePlan);
@@ -314,6 +328,16 @@ function App() {
       setSaveError('Your workspace has not finished loading. Refresh the page; if this continues, check the workspace error shown on the page.');
       return;
     }
+    if (workspace.owner_id !== session.user.id) {
+      if (payload.id && !myWorkspacePermissions.can_edit_solutions) {
+        setSaveError('Your workspace owner has not granted you permission to edit solutions. You can still view and search the knowledge base.');
+        return;
+      }
+      if (!payload.id && !myWorkspacePermissions.can_create_solutions) {
+        setSaveError('Your workspace owner has not granted you permission to create solutions.');
+        return;
+      }
+    }
     setSaving(true);
     let uploadedImagePath = null;
     try {
@@ -367,6 +391,10 @@ function App() {
   }
 
   async function deleteSolution(item) {
+    if (supabase && item && !item.demo && workspace?.owner_id !== session?.user?.id && !myWorkspacePermissions.can_delete_solutions) {
+      notify('Your workspace owner has not granted you permission to delete solutions.');
+      return;
+    }
     if (!confirm(`Delete “${item.title}”? This cannot be undone.`)) return;
     if (!supabase || item.demo) {
       setSolutions(prev => prev.filter(s => s.id !== item.id));
@@ -392,6 +420,9 @@ function App() {
     }
   }
 
+  const canCreateSolution = !supabase || workspace?.owner_id===session?.user?.id || myWorkspacePermissions.can_create_solutions;
+  const canEditSolution = !supabase || workspace?.owner_id===session?.user?.id || myWorkspacePermissions.can_edit_solutions;
+  const canDeleteSolution = !supabase || workspace?.owner_id===session?.user?.id || myWorkspacePermissions.can_delete_solutions;
   const legalView = new URLSearchParams(window.location.search).get('legal');
   if (legalView === 'terms' || legalView === 'privacy' || legalView === 'acceptable-use') return <LegalPage page={legalView} />;
   if (authLoading) return <div className="loading-screen"><div className="brand-mark"><RotateCcw size={24}/></div><span>Warming up the time machine…</span></div>;
@@ -418,7 +449,7 @@ function App() {
       <header className="topbar"><button className="icon-btn mobile-menu" onClick={()=>setMobileNav(true)}><Menu size={20}/></button><div className="crumb">Workspace <span>/</span> <strong>{activeNav}</strong></div><div className="top-actions"><div className="secure-pill"><ShieldCheck size={15}/> Private workspace</div><div className="top-avatar">{session.user.email?.slice(0,1).toUpperCase()}</div></div></header>
       <div className="page-content">
         {authError && <div className="form-error" role="alert" style={{marginBottom:16,display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}><span>{authError}</span><button type="button" className="icon-btn" aria-label="Dismiss error" onClick={()=>setAuthError('')}><X size={16}/></button></div>}
-        {activeNav==='Dashboard' ? <Dashboard solutions={solutions} onNew={()=>setModal({kind:'new'})} onBrowse={()=>setActiveNav('Solutions')} onOpenSolution={s=>{setSelected(s);setModal({kind:'view'});}} onEditSolution={s=>{setSelected(s);setModal({kind:'edit'});}} onDeleteSolution={deleteSolution} /> :
+        {activeNav==='Dashboard' ? <Dashboard solutions={solutions} onNew={()=>setModal({kind:'new'})} onBrowse={()=>setActiveNav('Solutions')} onOpenSolution={s=>{setSelected(s);setModal({kind:'view'});}} onEditSolution={s=>{setSelected(s);setModal({kind:'edit'});}} onDeleteSolution={deleteSolution} canCreate={canCreateSolution} canEdit={canEditSolution} canDelete={canDeleteSolution}/> :
           activeNav==='Team' ? <TeamPage workspace={workspace} session={session} notify={notify} /> :
           activeNav==='Plans' ? <PlansPage notify={notify} workspace={workspace} session={session} /> :
           activeNav==='Settings' ? <SettingsPage workspace={workspace} canRenameWorkspace={workspace?.owner_id === session.user.id} workspaceName={workspaceName} setWorkspaceName={setWorkspaceName} onSave={saveWorkspaceName} saving={saving} message={settingsMessage} error={settingsError} onExport={exportSolutions} email={session.user.email} onSignOut={signOut} onDeleteAccount={deleteAccount} deletingAccount={deletingAccount} deleteAccountError={deleteAccountError} /> :
@@ -430,13 +461,13 @@ function App() {
             <div className="filter-bar"><div className="search-field"><Search size={18}/><input ref={searchInputRef} value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search problems, keywords, or steps…" aria-label="Search solutions"/><kbd><Command size={11}/> K</kbd></div><div className="select-wrap" title="Filter by category" onClick={e=>{if(e.target.tagName!=='SELECT'){const el=e.currentTarget.querySelector('select');el?.focus();try{el?.showPicker?.();}catch{}}}}><Filter size={16}/><select aria-label="Filter by category" value={category} onChange={e=>setCategory(e.target.value)}><option value="__all__">All categories</option>{categories.map(c=><option key={c} value={c}>{c}</option>)}</select><ChevronDown size={14}/></div><div className="select-wrap" title="Sort solutions" onClick={e=>{if(e.target.tagName!=='SELECT'){const el=e.currentTarget.querySelector('select');el?.focus();try{el?.showPicker?.();}catch{}}}}><Clock3 size={16}/><select aria-label="Sort solutions" value={sortOrder} onChange={e=>setSortOrder(e.target.value)}><option value="recent">Recently updated</option><option value="oldest">Oldest first</option><option value="title">Title A–Z</option></select><ChevronDown size={14}/></div></div>
             {loadingData ? <div className="empty-state"><div className="loader"/><h3>Loading your knowledge…</h3></div> :
               filtered.length===0 ? <div className="empty-state"><div className="empty-icon"><Search size={25}/></div><h3>{query?'No matching fixes':'Your knowledge base is ready'}</h3><p>{query?'Try another keyword or change the category filter.':'Save the first solution so your team never has to solve it twice.'}</p><button className="primary-btn" onClick={()=>{if((activePlanKey==='starter'&&solutions.length>=FREE_SOLUTION_LIMIT)||(activePlanKey==='team'&&solutions.length>=TEAM_SOLUTION_LIMIT)){setActiveNav('Plans');notify(activePlanKey==='team'?`Team plan limit reached: ${TEAM_SOLUTION_LIMIT} solutions per workspace.`:`Free preview limit reached: ${FREE_SOLUTION_LIMIT} solutions per workspace.`);return;}setSaveError('');setModal({kind:'new'});}}><Plus size={17}/> Add a solution</button></div> :
-              <div className="solution-grid">{filtered.map((s,i)=><SolutionCard key={s.id} item={s} index={i} onOpen={()=>{setSelected(s);setModal({kind:'view'});}} onEdit={()=>{setSelected(s);setModal({kind:'edit'});}} onDelete={()=>deleteSolution(s)} />)}</div>}
+              <div className="solution-grid">{filtered.map((s,i)=><SolutionCard key={s.id} item={s} index={i} onOpen={()=>{setSelected(s);setModal({kind:'view'});}} onEdit={()=>{setSelected(s);setModal({kind:'edit'});}} onDelete={()=>deleteSolution(s)} canEdit={canEditSolution} canDelete={canDeleteSolution}/>)}</div>}
             {!supabase&&<div className="demo-notice"><CircleHelp size={16}/><div><strong>Preview mode</strong><span>These are sample fixes. Add your Supabase settings to enable real accounts and persistent saving.</span></div></div>}
           </>}
       </div>
       <footer className="footer"><span>© {new Date().getFullYear()} The Last Time Machine</span><span className="footer-legal"><a href="?legal=terms" target="_blank" rel="noreferrer">Terms</a><a href="?legal=privacy" target="_blank" rel="noreferrer">Privacy</a><a href="?legal=acceptable-use" target="_blank" rel="noreferrer">Acceptable Use</a><LockKeyhole size={13}/> Your knowledge. Your workspace.</span></footer>
     </main>
-    {modal&&<Modal kind={modal.kind} item={selected} categories={categoryOptions} onClose={()=>{setModal(null);setSelected(null);setSaveError('');}} onSave={saveSolution} error={saveError} onEdit={()=>{setSaveError('');setModal({kind:'edit'});}} onDelete={deleteSolution} saving={saving} signedIn={!!session} />}
+    {modal&&<Modal kind={modal.kind} item={selected} categories={categoryOptions} onClose={()=>{setModal(null);setSelected(null);setSaveError('');}} onSave={saveSolution} error={saveError} onEdit={()=>{setSaveError('');setModal({kind:'edit'});}} onDelete={deleteSolution} saving={saving} signedIn={!!session} canEdit={canEditSolution} canDelete={canDeleteSolution} />}
     {toast&&<div className="toast"><Check size={17}/>{toast}</div>}
   </div>;
 }
@@ -453,15 +484,15 @@ function AuthScreen({configured,onResetPassword,mode,setMode,email,setEmail,pass
 
 function Stat({icon:Icon,label,value,tint}) { return <div className="stat-card"><div className={`stat-icon ${tint}`}><Icon size={19}/></div><div><span>{label}</span><strong>{value}</strong></div><div className="stat-spark"><Activity size={16}/></div></div>; }
 
-function SolutionCard({item,index,onOpen,onEdit,onDelete}) {
+function SolutionCard({item,index,onOpen,onEdit,onDelete,canEdit=true,canDelete=true}) {
   const colors=['blue','violet','green','amber'];
   const iconMap={Payments:'↗','Account Access':'◎',Inventory:'▦',Email:'✉'};
-  return <article className="solution-card" style={{animationDelay:`${index*55}ms`}}><div className="solution-card-top"><div className={`category-icon ${colors[index%colors.length]}`}>{iconMap[item.category]||<FileText size={18}/>}</div><div className="card-actions"><button className="icon-btn" onClick={onEdit} title="Edit solution" aria-label={`Edit ${item.title}`}><MoreHorizontal size={19}/></button><button className="icon-btn delete-card-btn" onClick={onDelete} title="Delete solution" aria-label={`Delete ${item.title}`}><Trash2 size={17}/></button></div></div><div className="solution-category">{item.category||'General'}</div><button className="solution-title" onClick={onOpen}>{item.title}</button><p className="solution-description">{item.problem_description||'No problem description added yet.'}</p>{item.image_url&&<img className="solution-card-image" src={item.image_url} alt={`Reference for ${item.title}`} loading="lazy" />}<div className="solution-card-bottom"><div className="last-fixed"><Clock3 size={14}/><span>Updated {timeAgo(item.updated_at||item.created_at)}</span></div><button className="view-link" onClick={onOpen}>View fix <ArrowUpRight size={15}/></button></div></article>;
+  return <article className="solution-card" style={{animationDelay:`${index*55}ms`}}><div className="solution-card-top"><div className={`category-icon ${colors[index%colors.length]}`}>{iconMap[item.category]||<FileText size={18}/>}</div><div className="card-actions">{canEdit&&<button className="icon-btn" onClick={onEdit} title="Edit solution" aria-label={`Edit ${item.title}`}><MoreHorizontal size={19}/></button>}{canDelete&&<button className="icon-btn delete-card-btn" onClick={onDelete} title="Delete solution" aria-label={`Delete ${item.title}`}><Trash2 size={17}/></button>}</div></div><div className="solution-category">{item.category||'General'}</div><button className="solution-title" onClick={onOpen}>{item.title}</button><p className="solution-description">{item.problem_description||'No problem description added yet.'}</p>{item.image_url&&<img className="solution-card-image" src={item.image_url} alt={`Reference for ${item.title}`} loading="lazy" />}<div className="solution-card-bottom"><div className="last-fixed"><Clock3 size={14}/><span>Updated {timeAgo(item.updated_at||item.created_at)}</span></div><button className="view-link" onClick={onOpen}>View fix <ArrowUpRight size={15}/></button></div></article>;
 }
 
-function Dashboard({solutions,onNew,onBrowse,onOpenSolution,onEditSolution,onDeleteSolution}) {
+function Dashboard({solutions,onNew,onBrowse,onOpenSolution,onEditSolution,onDeleteSolution,canCreate=true,canEdit=true,canDelete=true}) {
   const recent=[...solutions].sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at)).slice(0,3);
-  return <><div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR OVERVIEW</div><h1>Good to have you back.</h1><p className="page-subtitle">Here's what your team's knowledge base looks like today.</p></div><button className="primary-btn" onClick={onNew}><Plus size={18}/> New solution</button></div><div className="welcome-banner dashboard-banner"><div className="welcome-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="welcome-clock"><RotateCcw size={24}/></div></div><div className="welcome-copy"><span className="banner-kicker">EVERY FIX BUILDS KNOWLEDGE</span><h2>Work smarter, not <span>from scratch.</span></h2><p>Turn your team's experience into your business's unfair advantage.</p></div></div><div className="stats-row"><Stat icon={BookOpen} label="Saved solutions" value={solutions.length} tint="blue"/><Stat icon={Activity} label="Categories" value={new Set(solutions.map(s=>s.category||'General')).size} tint="violet"/><Stat icon={Clock3} label="Recent fixes" value={solutions.filter(s=>Date.now()-new Date(s.created_at).getTime()<86400000*7).length} tint="green"/></div><div className="list-heading"><div><h2>Recently updated</h2><p>Jump back into your team's latest fixes.</p></div><button className="view-link" onClick={onBrowse}>All solutions <ArrowRight size={15}/></button></div><div className="solution-grid">{recent.map((s,i)=><SolutionCard key={s.id} item={s} index={i} onOpen={() => onOpenSolution(s)} onEdit={() => onEditSolution(s)} onDelete={() => onDeleteSolution(s)}/>)}</div></>;
+  return <><div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR OVERVIEW</div><h1>Good to have you back.</h1><p className="page-subtitle">Here's what your team's knowledge base looks like today.</p></div>{canCreate&&<button className="primary-btn" onClick={onNew}><Plus size={18}/> New solution</button>}</div><div className="welcome-banner dashboard-banner"><div className="welcome-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="welcome-clock"><RotateCcw size={24}/></div></div><div className="welcome-copy"><span className="banner-kicker">EVERY FIX BUILDS KNOWLEDGE</span><h2>Work smarter, not <span>from scratch.</span></h2><p>Turn your team's experience into your business's unfair advantage.</p></div></div><div className="stats-row"><Stat icon={BookOpen} label="Saved solutions" value={solutions.length} tint="blue"/><Stat icon={Activity} label="Categories" value={new Set(solutions.map(s=>s.category||'General')).size} tint="violet"/><Stat icon={Clock3} label="Recent fixes" value={solutions.filter(s=>Date.now()-new Date(s.created_at).getTime()<86400000*7).length} tint="green"/></div><div className="list-heading"><div><h2>Recently updated</h2><p>Jump back into your team's latest fixes.</p></div><button className="view-link" onClick={onBrowse}>All solutions <ArrowRight size={15}/></button></div><div className="solution-grid">{recent.map((s,i)=><SolutionCard key={s.id} item={s} index={i} onOpen={() => onOpenSolution(s)} onEdit={() => onEditSolution(s)} onDelete={() => onDeleteSolution(s)} canEdit={canEdit} canDelete={canDelete}/>)}</div></>;
 }
 function TeamPage({workspace,session,notify}) {
   const [members,setMembers] = useState([]);
@@ -471,20 +502,72 @@ function TeamPage({workspace,session,notify}) {
   const [inviteNote,setInviteNote] = useState('');
   const [inviteUrl,setInviteUrl] = useState('');
   const [inviting,setInviting] = useState(false);
+  const [savingPermissionsFor,setSavingPermissionsFor] = useState('');
+  const isOwner = workspace?.owner_id === session?.user?.id;
+
   useEffect(() => {
     let alive = true;
     async function loadMembers() {
       if (!supabase || !workspace?.id) { setLoadingMembers(false); return; }
       setLoadingMembers(true); setMemberError('');
       try {
-        const {data,error} = await supabase.from('workspace_members').select('user_id,role,joined_at').eq('workspace_id',workspace.id).order('joined_at',{ascending:true});
-        if (error) throw error;
-        if (alive) setMembers(data || []);
+        const {data: memberRows,error: memberQueryError} = await supabase.from('workspace_members')
+          .select('user_id,role,joined_at').eq('workspace_id',workspace.id).order('joined_at',{ascending:true});
+        if (memberQueryError) throw memberQueryError;
+        const rows = memberRows || [];
+        const ids = rows.map(member => member.user_id);
+        let profileRows = [];
+        let permissionRows = [];
+        if (ids.length) {
+          const {data: fetchedProfiles,error: profileError} = await supabase.from('profiles')
+            .select('user_id,display_name,email').in('user_id',ids);
+          if (profileError) throw profileError;
+          profileRows = fetchedProfiles || [];
+          const {data: fetchedPermissions,error: permissionsError} = await supabase.from('workspace_member_permissions')
+            .select('user_id,can_create_solutions,can_edit_solutions,can_delete_solutions').eq('workspace_id',workspace.id);
+          if (permissionsError) throw permissionsError;
+          permissionRows = fetchedPermissions || [];
+        }
+        const profilesById = Object.fromEntries(profileRows.map(profile => [profile.user_id, profile]));
+        const permissionsById = Object.fromEntries(permissionRows.map(permission => [permission.user_id, permission]));
+        const enriched = rows.map(member => ({
+          ...member,
+          profile: profilesById[member.user_id] || null,
+          permissions: permissionsById[member.user_id] || {can_create_solutions:false,can_edit_solutions:false,can_delete_solutions:false}
+        }));
+        if (alive) setMembers(enriched);
       } catch(e) { if (alive) setMemberError(e.message || 'Could not load workspace members.'); }
       finally { if (alive) setLoadingMembers(false); }
     }
     loadMembers(); return () => { alive = false; };
-  },[workspace?.id]);
+  },[workspace?.id,session?.user?.id]);
+
+  function changePermission(userId,key,value) {
+    setMembers(current => current.map(member => member.user_id===userId
+      ? {...member,permissions:{...(member.permissions||{}),[key]:value}}
+      : member));
+  }
+
+  async function saveMemberPermissions(member) {
+    if (!isOwner || !member || member.user_id===session?.user?.id) return;
+    setSavingPermissionsFor(member.user_id);
+    try {
+      const row = member.permissions || {};
+      const {error} = await supabase.from('workspace_member_permissions').upsert({
+        workspace_id:workspace.id,
+        user_id:member.user_id,
+        can_create_solutions:!!row.can_create_solutions,
+        can_edit_solutions:!!row.can_edit_solutions,
+        can_delete_solutions:!!row.can_delete_solutions,
+        updated_at:new Date().toISOString()
+      }, {onConflict:'workspace_id,user_id'});
+      if (error) throw error;
+      notify('Member permissions saved.');
+    } catch(e) {
+      notify(e.message || 'Could not save member permissions.');
+    } finally { setSavingPermissionsFor(''); }
+  }
+
   async function createInvite(e) {
     e.preventDefault(); setInviteNote(''); setInviteUrl('');
     const email = inviteEmail.trim().toLowerCase();
@@ -508,16 +591,46 @@ function TeamPage({workspace,session,notify}) {
   return <>
     <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> TEAM WORKSPACE</div><h1>Your team</h1><p className="page-subtitle">See who belongs to this workspace and invite teammates securely.</p></div></div>
     <div className="team-layout">
-      <section className="team-panel"><div className="eyebrow">WORKSPACE MEMBERS</div><h2>{workspace?.name || 'Your workspace'}</h2><p className="panel-copy">Members who currently have access to this workspace.</p>
-        {loadingMembers ? <div className="member-empty"><div className="loader"/> Loading members…</div> : memberError ? <div className="form-error">{memberError}</div> : members.length ? members.map((member) => <div className="member-row" key={member.user_id}><div className="profile-avatar">{member.user_id===session?.user?.id?(session?.user?.email?.slice(0,1).toUpperCase()||'Y'):'M'}</div><div><strong>{member.user_id===session?.user?.id?(session?.user?.email||'You'):'Workspace member'}</strong><p>{member.role || 'member'}{member.joined_at?` · joined ${new Date(member.joined_at).toLocaleDateString()}`:''}</p></div>{member.user_id===session?.user?.id&&<span className="detail-category">You</span>}</div>) : <div className="member-empty">No membership records found. Refresh or check your workspace permissions.</div>}
-        <div className="form-success" style={{marginTop:16}}>Invitation access is granted server-side only after the invited person signs in with the matching email and accepts the unexpired link.</div>
+      <section className="team-panel">
+        <div className="eyebrow">WORKSPACE MEMBERS</div><h2>{workspace?.name || 'Your workspace'}</h2>
+        <p className="panel-copy">New teammates start with view-only access. As owner, grant only the solution permissions each person needs.</p>
+        {loadingMembers ? <div className="member-empty"><div className="loader"/> Loading members…</div> : memberError ? <div className="form-error">{memberError}</div> : members.length ? members.map(member => {
+          const profileEmail = member.profile?.email || (member.user_id===session?.user?.id ? session?.user?.email : '');
+          const profileName = member.profile?.display_name && member.profile.display_name !== 'Workspace member'
+            ? member.profile.display_name
+            : (profileEmail ? profileEmail.split('@')[0].replace(/[._-]+/g,' ') : 'Workspace member');
+          const isSelf = member.user_id===session?.user?.id;
+          const mayManage = isOwner && !isSelf;
+          const permissions = member.permissions || {can_create_solutions:false,can_edit_solutions:false,can_delete_solutions:false};
+          return <div className="member-access-card" key={member.user_id}>
+            <div className="member-row">
+              <div className="profile-avatar">{(profileName || profileEmail || 'M').slice(0,1).toUpperCase()}</div>
+              <div className="member-identity">
+                <strong>{profileName || 'Workspace member'}{isSelf ? ' (you)' : ''}</strong>
+                {profileEmail&&<p>{profileEmail}</p>}
+                <p>{member.role || 'member'}{member.joined_at ? ' · joined ' + new Date(member.joined_at).toLocaleDateString() : ''}</p>
+              </div>
+              {member.role==='owner'&&<span className="detail-category">Owner</span>}
+            </div>
+            {mayManage ? <div className="member-permissions">
+              <div className="permission-panel-heading"><ShieldCheck size={16}/> Solution permissions</div>
+              <label className="permission-option"><input type="checkbox" checked={!!permissions.can_create_solutions} onChange={e=>changePermission(member.user_id,'can_create_solutions',e.target.checked)}/> Create solutions</label>
+              <label className="permission-option"><input type="checkbox" checked={!!permissions.can_edit_solutions} onChange={e=>changePermission(member.user_id,'can_edit_solutions',e.target.checked)}/> Edit solutions</label>
+              <label className="permission-option"><input type="checkbox" checked={!!permissions.can_delete_solutions} onChange={e=>changePermission(member.user_id,'can_delete_solutions',e.target.checked)}/> Delete solutions</label>
+              <button type="button" className="secondary-btn permission-save" disabled={savingPermissionsFor===member.user_id} onClick={()=>saveMemberPermissions(member)}>{savingPermissionsFor===member.user_id?'Saving…':'Save permissions'}</button>
+            </div> : <div className="member-access-note">{isSelf && isOwner ? 'Owner · full access' : 'Access: ' + (permissions.can_create_solutions || permissions.can_edit_solutions || permissions.can_delete_solutions ? [permissions.can_create_solutions?'create':'',permissions.can_edit_solutions?'edit':'',permissions.can_delete_solutions?'delete':''].filter(Boolean).join(', ') : 'view and search only')}</div>}
+          </div>;
+        }) : <div className="member-empty">No membership records found. Refresh or check your workspace permissions.</div>}
+        <div className="form-success" style={{marginTop:16}}>Permissions are enforced by Supabase. Hiding a button is not the security boundary.</div>
       </section>
-      <section className="team-panel"><div className="eyebrow">INVITE A TEAMMATE</div><h2>Bring your team in</h2><p className="panel-copy">Create a single-use invitation link that expires in seven days. Email delivery is opened in your mail app; the server never trusts the browser to grant membership.</p>
+      {isOwner ? <section className="team-panel"><div className="eyebrow">INVITE A TEAMMATE</div><h2>Bring your team in</h2><p className="panel-copy">Create a single-use invitation link that expires in seven days. Email delivery is opened in your mail app; the server never trusts the browser to grant membership.</p>
         <form className="solution-form" onSubmit={createInvite}><label>Teammate email<input type="email" required value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} placeholder="teammate@company.com"/></label><button className="secondary-btn" disabled={inviting}><Mail size={16}/>{inviting?'Creating secure invitation…':'Create secure invitation'}</button>{inviteNote&&<div className={inviteUrl?'form-success':'form-error'} role="status">{inviteNote}</div>}{inviteUrl&&<><label>Invitation link<input readOnly value={inviteUrl} onFocus={e=>e.target.select()}/></label><button type="button" className="secondary-btn" onClick={async()=>{try{await navigator.clipboard.writeText(inviteUrl);notify('Invitation link copied');}catch{notify('Select and copy the invitation link above.');}}}>Copy invitation link</button></>}</form>
-        <div className="coming-list"><div><ShieldCheck size={16}/> Only workspace owners/admins can issue invitations. Links are hashed in the database, expire after 7 days, and are checked against the signed-in account email.</div></div>
-      </section>
+        <div className="coming-list"><div><ShieldCheck size={16}/> Invitees start with view-only access. Grant more privileges from the member list after they join.</div></div>
+      </section> : <section className="team-panel"><div className="eyebrow">TEAM ACCESS</div><h2>Managed by your owner</h2><p className="panel-copy">Your workspace owner manages invitations and your access to creating, editing, and deleting solutions.</p></section>}
     </div>
   </>;
+}
+
 }
 
 function PlansPage({notify}) {
@@ -573,7 +686,7 @@ function LegalPage({page}) {
   return <div className="legal-shell"><div className="legal-top"><a className="brand legal-brand" href="/"><span className="brand-mark"><RotateCcw size={20}/></span><span className="brand-name">The Last <span>Time Machine</span></span></a><a className="secondary-btn" href="/">Back to sign in</a></div><article className="legal-document"><div className="eyebrow"><span className="eyebrow-dot"/> LEGAL INFORMATION</div><h1>{title}</h1><p className="legal-effective">Version effective 13 October 2026 · Last updated 13 October 2026</p>{page==='terms'?<><h2>1. About the service</h2><p>The Last Time Machine is a workspace-based service for recording, searching, and reusing solutions to recurring business problems. Features may change. During preview or beta use, the service may be interrupted and features may be incomplete.</p><h2>2. Eligibility and accounts</h2><p>You must be legally able to enter a binding agreement where you live and be authorized to act for any business workspace you create. Keep your sign-in credentials secure, provide accurate account information, and promptly report suspected unauthorized access. If you are not legally eligible to agree to these terms, do not create an account.</p><h2>3. Workspace owners and members</h2><p>Workspace owners and administrators manage access and are responsible for inviting appropriate members. Members may be able to see workspace content. Do not add people who should not access that information. You are responsible for ensuring you have the right to upload content and share it with your workspace.</p><h2>4. Acceptable use</h2><p>You may not use the service unlawfully, infringe another person's rights, upload malware, probe or access accounts or data without permission, interfere with the service, or attempt to bypass access controls. Do not store passwords, payment-card details, government identifiers, health records, or other highly sensitive information in solution records.</p><h2>5. Your content</h2><p>You retain the rights you have in content you submit. You give the service permission to host, process, display, and back up that content only as reasonably necessary to operate, secure, and support the service. You are responsible for the accuracy and lawfulness of your content and should keep independent copies of important records.</p><h2>6. Availability and changes</h2><p>We aim to keep the service useful and secure but do not guarantee uninterrupted availability, error-free operation, or that every record can always be recovered. We may change or discontinue features and will make reasonable efforts to communicate material changes where appropriate.</p><h2>7. Suspension and termination</h2><p>Access may be suspended or terminated for security reasons, serious misuse, legal requirements, or material violations of these terms. You may stop using the service and request account deletion through Settings, subject to workspace ownership and data-retention constraints described in the Privacy Policy.</p><h2>8. Disclaimers and limitation of liability</h2><p>To the fullest extent permitted by law, the service is provided on an “as available” basis and without warranties that the law does not allow us to disclaim. Nothing in these terms excludes or limits liability, consumer rights, or remedies that cannot lawfully be excluded or limited. To the fullest extent permitted by law, the operator will not be liable for indirect, incidental, special, consequential, exemplary, or punitive losses, loss of profits, loss of business, or loss of data. The operator’s total aggregate liability arising out of or related to the service will not exceed the greater of (a) the amount you paid to use the service during the 12 months before the event giving rise to the claim or (b) US$50. This cap does not apply where prohibited by law or to liability that cannot lawfully be limited.</p><h2>9. Subscriptions and billing</h2><p>The service is currently offered without paid subscriptions through this version of the terms. If paid plans are introduced, we will show the applicable price, billing interval, and material conditions before you purchase. Unless stated otherwise at checkout, subscriptions will renew for the displayed billing interval until cancelled. You may cancel future renewals using the available account or billing controls; cancellation generally takes effect at the end of the current paid period. Prices may exclude taxes, which will be shown or applied where required. Any price change for an existing subscription will be communicated in advance and will apply no earlier than the next renewal, subject to applicable law. Refunds are handled under the terms shown at purchase and mandatory law; nothing here removes non-waivable refund rights.</p><h2>10. Governing law and disputes</h2><p>These terms are governed by the laws of Saint Lucia, without preventing any mandatory consumer-protection rules that apply in your country of residence. Subject to those mandatory rights, the courts of Saint Lucia will have jurisdiction over disputes arising from these terms or the service. Nothing in this section prevents a consumer from bringing a claim in a court where applicable law gives them that right.</p><h2>11. Operator and contact</h2><p>The Last Time Machine is operated by Dimitre Richelieu, business address Mourne Dou Don Road, Castries, Saint Lucia. For support, privacy questions, or legal notices, email <a href="mailto:richelieureserved@gmail.com">richelieureserved@gmail.com</a>. These contact details do not imply that a separately incorporated company exists.</p></>:page==='privacy'?<><h2>1. Information we process</h2><p>Depending on how you use the service, we process your email address and authentication identifiers; workspace name and membership; solution titles, problem descriptions, categories, steps, outcomes, and uploaded reference images; and basic technical information needed to operate and protect the service. Do not submit sensitive information that the service is not designed to handle.</p><h2>2. Purposes</h2><p>We use information to create and secure accounts, provide workspaces and knowledge-base features, support search and export, administer invitations, prevent abuse, maintain service reliability, and respond to support requests.</p><h2>3. Workspace visibility</h2><p>Workspace content is intended to be available to authorized workspace members and service administrators when necessary for support or security. Workspace owners control invitations. Do not upload information unless you are permitted to share it with the workspace.</p><h2>4. Providers and international processing</h2><p>We use Supabase for authentication, database services, and private image storage. The Supabase project is configured in the US East (North Virginia) region. The application frontend is deployed separately from Supabase; the identity and processing location of that frontend host depend on the deployment configuration. Service providers may process information in other countries under their applicable terms and safeguards. We update this notice when our material providers or processing arrangements change.</p><h2>5. Cookies and local storage</h2><p>The current application does not intentionally use advertising cookies or third-party analytics. Supabase authentication may use browser storage to keep your session signed in. If analytics, advertising, or other non-essential tracking is added later, this policy and any required consent controls must be updated before enabling it.</p><h2>6. Retention and deletion</h2><p>We retain information while an account or workspace needs it to provide the service, subject to security, legal, backup, and dispute-resolution needs. Account deletion removes the user's account and personal workspace access through the in-app deletion flow, but shared workspace records may be retained for other members. Backups may persist temporarily until normal rotation. Any mandatory retention obligations take precedence.</p><h2>7. Security</h2><p>We use access controls and private storage policies intended to limit access to authorized workspaces. No internet service can promise absolute security. Users should keep credentials secure and avoid uploading secrets or highly sensitive personal data. We continually work to maintain appropriate security controls, but no controls can eliminate every risk or guarantee that unauthorized access will never occur.</p><h2>8. Your choices and rights</h2><p>Depending on the law that applies to you, you may have the right to request access to your personal information, receive a copy of it, correct inaccurate information, request deletion or restriction of processing, object to certain processing, withdraw consent where processing relies on consent, and complain to a data-protection regulator. You may also have rights to data portability or to challenge certain automated decisions where the law provides them. You can export solution records and initiate account deletion from Settings. For requests that cannot be completed in the app, email <a href="mailto:richelieureserved@gmail.com">richelieureserved@gmail.com</a>. We will verify your identity where reasonably necessary and respond within the deadline required by applicable law; where GDPR applies, this is generally within one month, subject to lawful extensions. Some information may be retained where legally permitted or required, including for security, dispute resolution, and other members’ continued use of shared workspaces. Do not email passwords or highly sensitive records.</p><h2>9. Children and eligibility</h2><p>The service is intended for business use, not for children. Do not use it if you are not legally eligible to enter the agreement or if your organization has not authorized your use.</p><h2>10. Operator and contact</h2><p>The Last Time Machine is operated by Dimitre Richelieu, business address Mourne Dou Don Road, Castries, Saint Lucia. Privacy contact: <a href="mailto:richelieureserved@gmail.com">richelieureserved@gmail.com</a>. We will update this notice when our providers, data practices, or legal obligations materially change.</p></>:<><h2>Use the service lawfully</h2><p>Use The Last Time Machine only for lawful business knowledge management and only with workspaces and content you are authorized to access.</p><h2>Prohibited conduct</h2><ul><li>Accessing another workspace, account, or record without permission.</li><li>Uploading malware, attempting to exploit the application, or disrupting service availability.</li><li>Uploading content that infringes intellectual property, privacy, confidentiality, or other rights.</li><li>Using the service for fraud, harassment, unlawful surveillance, or any illegal purpose.</li><li>Storing passwords, payment-card information, government IDs, health records, or other sensitive secrets in solution records.</li><li>Trying to evade authentication, invitation expiry, workspace access policies, or usage limits.</li></ul><h2>Reporting misuse</h2><p>Report suspected abuse or unauthorized access to <a href="mailto:richelieureserved@gmail.com">richelieureserved@gmail.com</a>. Access may be restricted to protect users or comply with law.</p></>}</article><footer className="legal-footer"><a href="?legal=terms">Terms of Service</a><a href="?legal=privacy">Privacy Policy</a><a href="?legal=acceptable-use">Acceptable Use</a></footer></div>;
 }
 
-function Modal({kind,item,categories=[],onClose,onSave,onEdit,onDelete,saving,signedIn,error:saveError}) {
+function Modal({kind,item,categories=[],onClose,onSave,onEdit,onDelete,saving,signedIn,error:saveError,canEdit=true,canDelete=true}) {
   const [title,setTitle]=useState(item?.title||'');
   const [problem,setProblem]=useState(item?.problem_description||'');
   const [category,setCategory]=useState(item?.category||'General');
@@ -591,7 +704,7 @@ function Modal({kind,item,categories=[],onClose,onSave,onEdit,onDelete,saving,si
   function submit(e){e.preventDefault();setError('');if(!title.trim()){setError('Add a title for this problem.');return;}if(title.trim().length>200){setError('Title must be 200 characters or fewer.');return;}if(!steps.trim()){setError('Add at least one solution step.');return;}if(creatingCategory&&!newCategory.trim()){setError('Enter a category name or choose an existing category.');return;}const rawCategory = creatingCategory ? newCategory : (categoryMatch || category);const cleanCategory = String(rawCategory || 'General').trim().replace(/\s+/g, ' ').slice(0,60) || 'General';const canonicalCategory = categories.find(value => categoryKey(value) === categoryKey(cleanCategory)) || cleanCategory;onSave({id:item?.id,title:title.trim(),problem_description:problem.trim(),category:canonicalCategory,steps:steps.split('\n').map(s=>s.trim()).filter(Boolean),outcome:outcome.trim(),imagePath,imageFile,oldImagePath:item?.image_path||null});}
   return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><div className={`modal ${isForm?'modal-wide':''}`} role="dialog" aria-modal="true"><div className="modal-head"><div><span className="modal-kicker">{isForm?'CAPTURE KNOWLEDGE':'SOLUTION DETAILS'}</span><h2>{kind==='new'?'Record a new fix':kind==='edit'?'Edit solution':item?.title}</h2></div><button className="icon-btn" onClick={onClose}><X size={19}/></button></div>
     {isForm?<form className="solution-form" onSubmit={submit}><label>Problem title <em>Required</em><input autoFocus value={title} onChange={e=>setTitle(e.target.value)} maxLength={200} placeholder="e.g. Customer payment keeps failing" required/></label><div className="form-two"><label>Category <em>Choose an existing category or create one</em><select value={creatingCategory ? "__create__" : (categoryMatch || category)} onChange={e=>{if(e.target.value==="__create__"){setCreatingCategory(true);setNewCategory("");}else{setCreatingCategory(false);setCategory(e.target.value);}}} aria-label="Choose category">{categories.map(c=><option key={c} value={c}>{c}</option>)}{!categoryMatch&&category&&<option value={category}>{category}</option>}<option value="__create__">＋ Create new category…</option></select>{creatingCategory&&<div className="category-create-row"><input autoFocus value={newCategory} onChange={e=>setNewCategory(e.target.value)} maxLength={60} placeholder="New category name" aria-label="New category name"/><button type="button" className="secondary-btn" onClick={()=>{const clean=newCategory.trim().replace(/\s+/g," ");if(!clean){setError("Enter a category name first.");return;}const existing=categories.find(c=>categoryKey(c)===categoryKey(clean));setCategory(existing||clean);setCreatingCategory(false);setNewCategory("");setError("");}}>Use category</button></div>}</label><label>What happened?<textarea value={problem} onChange={e=>setProblem(e.target.value)} rows={3} placeholder="Describe the problem and any symptoms…"/></label></div><label>Steps that fixed it <em>Required · one step per line</em><textarea value={steps} onChange={e=>setSteps(e.target.value)} rows={5} placeholder={'1. Check the account status\n2. Verify the settings\n3. Retry and confirm'} required/></label><label>Final outcome<textarea value={outcome} onChange={e=>setOutcome(e.target.value)} rows={2} placeholder="How did you confirm the problem was solved?"/></label><div className="optional-image-field"><label htmlFor="solution-image">Reference image <em>Optional</em></label><p>Add a screenshot or photo to help explain the fix. Images are private to your workspace. JPG, PNG, WebP or GIF · max 5 MB.</p><input id="solution-image" type="file" accept="image/*" onChange={e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>5*1024*1024){setError('Images must be 5 MB or smaller.');e.target.value='';return;}setImageFile(f);setImagePath(null);setImagePreview(URL.createObjectURL(f));setError('');}} />{imagePreview&&<div className="image-preview-wrap"><img className="image-preview" src={imagePreview} alt="Selected solution reference" /><button type="button" className="secondary-btn" onClick={()=>{setImageFile(null);setImagePath(null);setImagePreview('');const input=document.getElementById('solution-image');if(input)input.value='';}}>Remove image</button></div>}</div>{error&&<div className="form-error" role="alert">{error}</div>}{saveError&&<div className="form-error" role="alert">{saveError}</div>}<div className="modal-actions"><button type="button" className="secondary-btn" onClick={onClose}>Cancel</button><button className="primary-btn" disabled={saving}>{saving?'Saving…':<><Check size={17}/> Save solution</>}</button></div></form>:
-    <div className="solution-detail"><div className="detail-meta"><span className="detail-category">{item?.category||'General'}</span><span><Clock3 size={14}/> Updated {new Date(item?.updated_at||item?.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</span></div><h3>What happened</h3><p>{item?.problem_description||'No description recorded.'}</p>{item?.image_url&&<div className="detail-image-wrap"><h3>Reference image</h3><a href={item.image_url} target="_blank" rel="noreferrer"><img className="detail-image" src={item.image_url} alt={`Reference for ${item.title}`} /></a></div>}<h3>Steps to fix it</h3><ol className="detail-steps">{(item?.steps||[]).map((step,i)=><li key={i}><span>{i+1}</span><p>{step}</p></li>)}</ol><h3>Outcome</h3><p>{item?.outcome||'No outcome recorded.'}</p><div className="modal-actions detail-actions"><button className="danger-btn" onClick={()=>onDelete(item)}><Trash2 size={16}/> Delete</button><button className="primary-btn" onClick={onEdit}><Pencil size={16}/> Edit solution</button></div></div>}
+    <div className="solution-detail"><div className="detail-meta"><span className="detail-category">{item?.category||'General'}</span><span><Clock3 size={14}/> Updated {new Date(item?.updated_at||item?.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</span></div><h3>What happened</h3><p>{item?.problem_description||'No description recorded.'}</p>{item?.image_url&&<div className="detail-image-wrap"><h3>Reference image</h3><a href={item.image_url} target="_blank" rel="noreferrer"><img className="detail-image" src={item.image_url} alt={`Reference for ${item.title}`} /></a></div>}<h3>Steps to fix it</h3><ol className="detail-steps">{(item?.steps||[]).map((step,i)=><li key={i}><span>{i+1}</span><p>{step}</p></li>)}</ol><h3>Outcome</h3><p>{item?.outcome||'No outcome recorded.'}</p><div className="modal-actions detail-actions">{canDelete&&<button className="danger-btn" onClick={()=>onDelete(item)}><Trash2 size={16}/> Delete</button>}{canEdit&&<button className="primary-btn" onClick={onEdit}><Pencil size={16}/> Edit solution</button>}</div></div>}
     </div></div>;
 }
 function timeAgo(date) { if(!date)return 'recently'; const days=Math.max(0,Math.floor((Date.now()-new Date(date).getTime())/86400000)); if(days===0)return 'today';if(days===1)return 'yesterday';if(days<7)return `${days} days ago`;if(days<30)return `${Math.floor(days/7)}w ago`;return new Date(date).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
