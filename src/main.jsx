@@ -6,7 +6,8 @@ import {
   ArrowUpRight, ChevronDown, Command, Lightbulb, ShieldCheck, Zap, X, Check,
   CircleHelp, Filter, MoreHorizontal, Pencil, Trash2, Menu, ArrowRight,
   FileText, Activity, LockKeyhole, Mail, Eye, EyeOff, RotateCcw,
-  UserRound, Camera, AtSign, Save
+  UserRound, Camera, AtSign, Save, Home, Folder, Bell, ChevronRight, Globe,
+  Shield, Wifi, BriefcaseBusiness, Tag, Crown
 } from 'lucide-react';
 import './styles.css';
 
@@ -26,6 +27,11 @@ function personNameFromEmail(email) {
   const localPart = String(email || '').split('@')[0].trim();
   if (!localPart) return 'My';
   return localPart.charAt(0).toLocaleUpperCase() + localPart.slice(1);
+}
+
+function initials(value) {
+  const parts = String(value || 'U').trim().split(/[\s.@_-]+/).filter(Boolean);
+  return parts.slice(0,2).map(part=>part.charAt(0).toUpperCase()).join('') || 'U';
 }
 
 function workspaceDisplayName(name, ownerId, user, displayName) {
@@ -771,23 +777,23 @@ function App() {
   return <div className="app-shell" data-theme={themeKey}>
     <aside className={`sidebar ${mobileNav?'sidebar-open':''}`}>
       <div className="brand"><div className="brand-mark"><RotateCcw size={20}/></div><div className="brand-name">The Last <span>Time Machine</span><small>REAL PROBLEMS. REAL FIXES.</small></div><button className="icon-btn mobile-close" onClick={()=>setMobileNav(false)}><X size={18}/></button></div>
-      <div className="workspace-picker" ref={workspaceMenuRef}>
-        <button
-          type="button"
-          className={`workspace-switch ${workspaceMenuOpen ? 'is-open' : ''}`}
-          onClick={() => setWorkspaceMenuOpen(open => !open)}
-          aria-label="Choose workspace"
-          aria-haspopup="true"
-          aria-expanded={workspaceMenuOpen}
-          disabled={switchingWorkspace}
-        >
-          <span className="workspace-avatar">{(workspace?.name || 'W').slice(0,1).toUpperCase()}</span>
-          <span className="workspace-text">
-            <strong>{workspaceDisplayName(workspace?.name, workspace?.owner_id, session.user, profile?.display_name)}</strong>
-            <span>{switchingWorkspace ? 'Switching workspace…' : 'Workspace'}</span>
-          </span>
-          <ChevronDown size={16} className="workspace-chevron" />
-        </button>
+      <nav className="main-nav" aria-label="Primary navigation">
+        <button className={`nav-item ${activeNav==='Dashboard'?'active':''}`} onClick={()=>{setActiveNav('Dashboard');setMobileNav(false);}}><Home size={19}/><span>Dashboard</span></button>
+        <button className={`nav-item ${activeNav==='Solutions'?'active':''}`} onClick={()=>{setActiveNav('Solutions');setMobileNav(false);}}><Lightbulb size={19}/><span>Solutions</span>{solutions.length>0&&<span className="nav-count">{solutions.length}</span>}</button>
+        <div className="workspace-picker workspace-picker-nav" ref={workspaceMenuRef}>
+          <button
+            type="button"
+            className={`nav-item workspace-switch workspace-nav-trigger ${workspaceMenuOpen ? 'is-open active' : ''}`}
+            onClick={() => setWorkspaceMenuOpen(open => !open)}
+            aria-label="Choose workspace"
+            aria-haspopup="true"
+            aria-expanded={workspaceMenuOpen}
+            disabled={switchingWorkspace}
+          >
+            <Folder size={19}/>
+            <span>Workspace</span>
+            <ChevronDown size={14} className="workspace-chevron" />
+          </button>
         {workspaceMenuOpen && <div className="workspace-menu" role="menu" aria-label="Your workspaces">
           <div className="workspace-menu-heading">
             <strong>Your workspaces</strong>
@@ -825,31 +831,56 @@ function App() {
           </button>
           <div className="workspace-menu-foot">Each workspace has its own solutions, team access, and plan.</div>
         </div>}
-      </div>
-      <div className="nav-label">WORKSPACE</div>
-      <nav className="main-nav">
-        {[['Dashboard',LayoutDashboard],['Solutions',BookOpen],['Team',Users],['Plans',Zap]].map(([label,Icon])=><button key={label} className={`nav-item ${activeNav===label?'active':''}`} onClick={()=>{setActiveNav(label);setMobileNav(false);}}><Icon size={18}/><span>{label}</span>{label==='Solutions'&&solutions.length>0&&<span className="nav-count">{solutions.length}</span>}</button>)}
-      </nav>
-      <div className="sidebar-bottom">
-        <div className="help-card"><div className="help-icon"><Lightbulb size={17}/></div><strong>Knowledge that sticks.</strong><p>Capture a fix today. Save your team time tomorrow.</p>{solutions.length>0&&<button onClick={()=>{setSaveError('');setModal({kind:'new'});}}>Add your first fix <ArrowRight size={14}/></button>}</div>
-        <button className={`nav-item ${activeNav==='Settings'?'active':''}`} onClick={()=>{setActiveNav('Settings');setWorkspaceName(workspace?.name||'');setSettingsMessage('');setSettingsError('');setMobileNav(false);}}><Settings size={18}/><span>Settings</span></button>
+        </div>
+        <button className={`nav-item ${activeNav==='Team'?'active':''}`} onClick={()=>{setActiveNav('Team');setMobileNav(false);}}><Users size={19}/><span>Team</span></button>
+        <button className={`nav-item ${activeNav==='Plans'?'active':''}`} onClick={()=>{setActiveNav('Plans');setMobileNav(false);}}><Crown size={19}/><span>Plans</span></button>
+        <div className="nav-divider" role="separator"/>
+        <button className={`nav-item ${activeNav==='Settings'?'active':''}`} onClick={()=>{setActiveNav('Settings');setWorkspaceName(workspace?.name||'');setSettingsMessage('');setSettingsError('');setMobileNav(false);}}><Settings size={19}/><span>Settings</span></button>
+        <button className="nav-item" onClick={()=>{setMobileNav(false);window.location.href='mailto:richelieureserved@gmail.com?subject=The%20Last%20Time%20Machine%20support';}}><CircleHelp size={19}/><span>Help</span></button>
+      </nav>      <div className="sidebar-bottom">
         <button
           type="button"
           className={`profile-row profile-row-button ${activeNav==='Profile'?'active':''}`}
           onClick={()=>{setActiveNav('Profile');setMobileNav(false);}}
           aria-label="Open your profile"
         >
-          <span className="profile-avatar">{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:(profile?.display_name||session.user.email||'U').slice(0,1).toUpperCase()}</span>
-          <span className="profile-info"><strong>{profile?.display_name||session.user.email?.split('@')[0]}</strong><span>{profile?.username?'@'+profile.username:session.user.email}</span></span>
+          <span className="profile-avatar">{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:initials(profile?.display_name||session.user.email||'U')}</span>
+          <span className="profile-info"><strong>{profile?.display_name||session.user.email?.split('@')[0]}</strong><span>{activePlanKey==='team'?'Team Plan':activePlanKey==='business'?'Business Plan':'Free Plan'}</span></span>
+          <ChevronRight size={15} className="profile-chevron"/>
         </button>
       </div>
     </aside>
     {mobileNav&&<div className="scrim" onClick={()=>setMobileNav(false)} />}
     <main className="main-area">
-      <header className="topbar"><button className="icon-btn mobile-menu" onClick={()=>setMobileNav(true)}><Menu size={20}/></button><div className="crumb">Workspace <span>/</span> <strong>{activeNav}</strong></div><div className="top-actions"><div className="secure-pill"><ShieldCheck size={15}/> Private workspace</div><button type="button" className={`top-avatar top-avatar-button ${activeNav==='Profile'?'active':''}`} aria-label="Open profile" onClick={()=>{setActiveNav('Profile');setMobileNav(false);}}>{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:(profile?.display_name||session.user.email||'U').slice(0,1).toUpperCase()}</button></div></header>
-      <div className="page-content">
+      <header className="topbar">
+        <button className="icon-btn mobile-menu" onClick={()=>setMobileNav(true)} aria-label="Open navigation"><Menu size={20}/></button>
+        {activeNav==='Dashboard' ? <label className="dashboard-global-search"><Search size={18}/><input ref={searchInputRef} value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search solutions..." aria-label="Search solutions"/><kbd>Ctrl K</kbd></label> : <div className="crumb">Workspace <span>/</span> <strong>{activeNav}</strong></div>}
+        <div className="top-actions">
+          {activeNav!=='Dashboard'&&<div className="secure-pill"><ShieldCheck size={15}/> Private workspace</div>}
+          <button type="button" className="icon-btn top-notifications" aria-label="Notifications" onClick={()=>notify('You’re all caught up.')}><Bell size={19}/></button>
+          <button type="button" className={`top-avatar top-avatar-button ${activeNav==='Profile'?'active':''}`} aria-label="Open profile" onClick={()=>{setActiveNav('Profile');setMobileNav(false);}}>{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:initials(profile?.display_name||session.user.email||'U')}</button>
+        </div>
+      </header>
+      <div className={"page-content " + (activeNav === "Dashboard" ? "dashboard-page-content" : "")}>
         {authError && <div className="form-error" role="alert" style={{marginBottom:16,display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}><span>{authError}</span><button type="button" className="icon-btn" aria-label="Dismiss error" onClick={()=>setAuthError('')}><X size={16}/></button></div>}
-        {activeNav==='Dashboard' ? <Dashboard solutions={solutions} onNew={()=>setModal({kind:'new'})} onBrowse={()=>setActiveNav('Solutions')} onOpenSolution={s=>{setSelected(s);setModal({kind:'view'});}} onEditSolution={s=>{setSelected(s);setModal({kind:'edit'});}} onDeleteSolution={deleteSolution} canCreate={canCreateSolution} canEdit={canEditSolution} canDelete={canDeleteSolution}/> :
+        {activeNav==='Dashboard' ? <Dashboard
+            solutions={solutions}
+            workspace={workspace}
+            session={session}
+            displayName={profile?.display_name||session.user.email?.split('@')[0]||'there'}
+            query={query}
+            setQuery={setQuery}
+            onNew={()=>{if(!canCreateSolution){setActiveNav('Plans');notify(activePlanKey==='team'?`Team plan limit reached: ${TEAM_SOLUTION_LIMIT} solutions per workspace.`:`Free preview limit reached: ${FREE_SOLUTION_LIMIT} solutions per workspace.`);return;}setSelected(null);setSaveError('');setModal({kind:'new'});}}
+            onCreateWorkspace={()=>{setCreateWorkspaceError('');setCreateWorkspaceName('');setCreateWorkspaceOpen(true);}}
+            onTeam={()=>setActiveNav('Team')}
+            onBrowse={chosenCategory=>{setCategory(chosenCategory||'__all__');setQuery('');setActiveNav('Solutions');}}
+            onOpenSolution={s=>{setSelected(s);setModal({kind:'view'});}}
+            onEditSolution={s=>{setSelected(s);setModal({kind:'edit'});}}
+            onDeleteSolution={deleteSolution}
+            canCreate={canCreateSolution}
+            canEdit={canEditSolution}
+            canDelete={canDeleteSolution}
+          /> :
           activeNav==='Team' ? <TeamPage workspace={workspace} session={session} notify={notify} /> :
           activeNav==='Plans' ? <PlansPage notify={notify} workspace={workspace} session={session} /> :
           activeNav==='Profile' ? <ProfilePage profile={profile} email={session.user.email} loading={profileLoading} loadError={profileLoadError} saving={profileSaving} onSave={saveProfile} notify={notify} /> :
@@ -923,10 +954,188 @@ function SolutionCard({item,index,onOpen,onEdit,onDelete,canEdit=true,canDelete=
   return <article className="solution-card" onPointerMove={handlePointerMove} onPointerLeave={resetPointer} style={{animationDelay:`${index*55}ms`}}><div className="solution-card-top"><div className={`category-icon ${colors[index%colors.length]}`}>{iconMap[item.category]||<FileText size={18}/>}</div><div className="card-actions">{canEdit&&<button className="icon-btn" onClick={onEdit} title="Edit solution" aria-label={`Edit ${item.title}`}><MoreHorizontal size={19}/></button>}{canDelete&&<button className="icon-btn delete-card-btn" onClick={onDelete} title="Delete solution" aria-label={`Delete ${item.title}`}><Trash2 size={17}/></button>}</div></div><div className="solution-category">{item.category||'General'}</div><button className="solution-title" onClick={onOpen}>{item.title}</button><p className="solution-description">{item.problem_description||'No problem description added yet.'}</p>{item.image_url&&<img className="solution-card-image" src={item.image_url} alt={`Reference for ${item.title}`} loading="lazy" />}<div className="solution-card-bottom"><div className="last-fixed"><Clock3 size={14}/><span>Updated {timeAgo(item.updated_at||item.created_at)}</span></div><button className="view-link" onClick={onOpen}>View fix <ArrowUpRight size={15}/></button></div></article>;
 }
 
-function Dashboard({solutions,onNew,onBrowse,onOpenSolution,onEditSolution,onDeleteSolution,canCreate=true,canEdit=true,canDelete=true}) {
-  const recent=[...solutions].sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at)).slice(0,3);
-  return <><div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR OVERVIEW</div><h1>Good to have you back.</h1><p className="page-subtitle">Here's what your team's knowledge base looks like today.</p></div>{canCreate&&<button className="primary-btn" onClick={onNew}><Plus size={18}/> New solution</button>}</div><div className="welcome-banner dashboard-banner"><div className="welcome-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="welcome-clock"><RotateCcw size={24}/></div></div><div className="welcome-copy"><span className="banner-kicker">EVERY FIX BUILDS KNOWLEDGE</span><h2>Work smarter, not <span>from scratch.</span></h2><p>Turn your team's experience into your business's unfair advantage.</p></div></div><div className="stats-row"><Stat icon={BookOpen} label="Saved solutions" value={solutions.length} tint="blue"/><Stat icon={Activity} label="Categories" value={new Set(solutions.map(s=>s.category||'General')).size} tint="violet"/><Stat icon={Clock3} label="Recent fixes" value={solutions.filter(s=>Date.now()-new Date(s.created_at).getTime()<86400000*7).length} tint="green"/></div><div className="list-heading"><div><h2>Recently updated</h2><p>Jump back into your team's latest fixes.</p></div><button className="view-link" onClick={onBrowse}>All solutions <ArrowRight size={15}/></button></div><div className="solution-grid">{recent.map((s,i)=><SolutionCard key={s.id} item={s} index={i} onOpen={() => onOpenSolution(s)} onEdit={() => onEditSolution(s)} onDelete={() => onDeleteSolution(s)} canEdit={canEdit} canDelete={canDelete}/>)}</div></>;
+function Dashboard({solutions,workspace,session,displayName,query,setQuery,onNew,onCreateWorkspace,onTeam,onBrowse,onOpenSolution,onEditSolution,onDeleteSolution,canCreate=true,canEdit=true,canDelete=true}) {
+  const [teamCount,setTeamCount] = useState(1);
+  useEffect(() => {
+    let alive = true;
+    async function loadTeamCount() {
+      if (!supabase || !workspace?.id) {
+        setTeamCount(session?.user?.id ? 1 : 0);
+        return;
+      }
+      try {
+        const {count,error} = await supabase.from('workspace_members')
+          .select('user_id',{count:'exact',head:true})
+          .eq('workspace_id',workspace.id);
+        if (error) throw error;
+        if (alive) setTeamCount(count ?? 1);
+      } catch {
+        if (alive) setTeamCount(1);
+      }
+    }
+    loadTeamCount();
+    return () => { alive = false; };
+  }, [workspace?.id,session?.user?.id]);
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const firstName = String(displayName || 'there').trim().split(/\s+/)[0] || 'there';
+  const sorted = [...solutions].sort((a,b)=>new Date(b.updated_at||b.created_at||0)-new Date(a.updated_at||a.created_at||0));
+  const categoryMap = solutions.reduce((map,item)=>{
+    const name = String(item.category||'General').trim() || 'General';
+    map.set(name,(map.get(name)||0)+1);
+    return map;
+  },new Map());
+  const categories = [...categoryMap.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  const recentFixes = solutions.filter(item=>{
+    const stamp = new Date(item.updated_at||item.created_at||0).getTime();
+    return Number.isFinite(stamp) && Date.now()-stamp < 7*86400000;
+  }).length;
+  const searchTerm = String(query||'').trim().toLowerCase();
+  const matching = searchTerm ? sorted.filter(item=>
+    [item.title,item.problem_description,item.category,...(item.steps||[])].some(value=>String(value||'').toLowerCase().includes(searchTerm))
+  ) : sorted;
+  const recent = matching.slice(0,5);
+  const categoryTone = name => {
+    const value=String(name||'').toLowerCase();
+    if(/network|internet|wifi|wi-fi|connection/.test(value)) return 'violet';
+    if(/account|security|password|access/.test(value)) return 'orange';
+    if(/software|system|setup|install/.test(value)) return 'teal';
+    if(/technology|hardware|camera|device|inventory|payment/.test(value)) return 'green';
+    return 'blue';
+  };
+  const categoryIcon = name => {
+    const value=String(name||'').toLowerCase();
+    if(/network|internet|wifi|wi-fi|connection/.test(value)) return Globe;
+    if(/account|security|password|access/.test(value)) return Shield;
+    if(/software|system|setup|install/.test(value)) return Settings;
+    if(/technology|hardware|camera|device|inventory/.test(value)) return BriefcaseBusiness;
+    if(/payment|billing/.test(value)) return Activity;
+    if(/email|message/.test(value)) return Mail;
+    return Lightbulb;
+  };
+  const timeLabel = value => {
+    if(!value) return 'Recently';
+    const stamp = new Date(value).getTime();
+    if(!Number.isFinite(stamp)) return 'Recently';
+    const days = Math.max(0,Math.floor((Date.now()-stamp)/86400000));
+    if(days===0) return 'Today';
+    if(days===1) return 'Yesterday';
+    if(days<7) return `${days} days ago`;
+    if(days<14) return '1 week ago';
+    if(days<30) return `${Math.floor(days/7)} weeks ago`;
+    return new Date(value).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  };
+  const quickActions = [
+    {title:'Add a Solution',description:'Save a new fix or guide',Icon:Lightbulb,onClick:onNew,tone:'blue',disabled:!canCreate},
+    {title:'Create Workspace',description:'Organize your solutions',Icon:Folder,onClick:onCreateWorkspace,tone:'blue'},
+    {title:'Invite Team Member',description:'Collaborate with others',Icon:Users,onClick:onTeam,tone:'blue'}
+  ];
+  return <div className="dashboard-layout">
+    <section className="dashboard-main-column" aria-label="Dashboard overview">
+      <div className="dashboard-greeting">
+        <div>
+          <h1>{greeting}, {firstName}</h1>
+          <p>Find and manage your time-saving solutions. Let's make today more efficient.</p>
+        </div>
+      </div>
+      <div className="dashboard-stats-grid">
+        <div className="dashboard-metric-card">
+          <span className="dashboard-metric-icon metric-blue"><Lightbulb size={22}/></span>
+          <span className="dashboard-metric-label">Total Solutions</span>
+          <strong>{solutions.length}</strong>
+          <small>Your saved solutions</small>
+        </div>
+        <div className="dashboard-metric-card">
+          <span className="dashboard-metric-icon metric-green"><Folder size={22}/></span>
+          <span className="dashboard-metric-label">Categories</span>
+          <strong>{categoryMap.size}</strong>
+          <small>Organized by topic</small>
+        </div>
+        <div className="dashboard-metric-card">
+          <span className="dashboard-metric-icon metric-purple"><Users size={22}/></span>
+          <span className="dashboard-metric-label">Team Members</span>
+          <strong>{teamCount}</strong>
+          <small>In your workspace</small>
+        </div>
+        <div className="dashboard-metric-card">
+          <span className="dashboard-metric-icon metric-orange"><Clock3 size={22}/></span>
+          <span className="dashboard-metric-label">Recent Fixes</span>
+          <strong>{recentFixes}</strong>
+          <small>Last 7 days</small>
+        </div>
+      </div>
+
+      <section className="dashboard-recent-section">
+        <div className="dashboard-section-heading">
+          <div><h2>Recent Solutions</h2><p>{searchTerm ? `Matches for “${query}”` : 'Your team\'s latest problem-solving wins.'}</p></div>
+          <button className="dashboard-view-all" onClick={()=>onBrowse()} type="button">View all <ArrowRight size={15}/></button>
+        </div>
+        <div className="dashboard-recent-list">
+          {recent.length ? recent.map((item,index)=>{
+            const category = item.category || 'General';
+            const Icon = categoryIcon(category);
+            const tone = categoryTone(category);
+            return <article className="dashboard-solution-row" key={item.id}>
+              <button className={`dashboard-row-icon tone-${tone}`} type="button" onClick={()=>onOpenSolution(item)} aria-label={`Open ${item.title}`}><Icon size={22}/></button>
+              <div className="dashboard-row-content">
+                <button className="dashboard-row-title" type="button" onClick={()=>onOpenSolution(item)}>{item.title}</button>
+                <p>{item.problem_description || 'Open this solution to see the recorded fix and steps.'}</p>
+                <button type="button" className={`dashboard-category-pill tone-${tone}`} onClick={()=>onBrowse(category)}>{category}</button>
+              </div>
+              <span className="dashboard-row-time">{timeLabel(item.updated_at||item.created_at)}</span>
+              {canEdit&&<button type="button" className="icon-btn dashboard-row-more" aria-label={`Edit ${item.title}`} title="Edit solution" onClick={()=>onEditSolution(item)}><MoreHorizontal size={18}/></button>}
+            </article>;
+          }) : <div className="dashboard-recent-empty"><Search size={22}/><strong>No matching solutions</strong><span>Try another search or view all your saved fixes.</span><button className="secondary-btn" type="button" onClick={()=>{setQuery('');onBrowse();}}>Clear search</button></div>}
+        </div>
+      </section>
+    </section>
+
+    <aside className="dashboard-rail" aria-label="Quick actions and workspace overview">
+      <section className="dashboard-quote-card">
+        <div className="dashboard-quote-copy">
+          <p>“The best time to solve a problem is before it becomes one.”</p>
+          <span>— The Last Time Machine</span>
+        </div>
+      </section>
+
+      <section className="dashboard-side-card">
+        <h2><Zap size={19}/> Quick Actions</h2>
+        <div className="dashboard-quick-actions">
+          {quickActions.map(({title,description,Icon,onClick,tone,disabled})=><button type="button" className="dashboard-quick-action" key={title} onClick={onClick} disabled={disabled}>
+            <span className={`dashboard-quick-icon tone-${tone}`}><Icon size={21}/></span>
+            <span className="dashboard-quick-copy"><strong>{title}</strong><small>{description}</small></span>
+            <ChevronRight size={17} className="dashboard-quick-chevron"/>
+          </button>)}
+        </div>
+      </section>
+
+      <section className="dashboard-side-card dashboard-categories-card">
+        <h2><Tag size={19}/> Categories</h2>
+        <div className="dashboard-category-list">
+          {categories.slice(0,4).map(([name,count])=>{
+            const Icon=categoryIcon(name);
+            const tone=categoryTone(name);
+            return <button type="button" className="dashboard-category-row" key={name} onClick={()=>onBrowse(name)}>
+              <span className={`dashboard-category-row-icon tone-${tone}`}><Icon size={15}/></span>
+              <span className="dashboard-category-name">{name}</span>
+              <span className={`dashboard-category-count tone-${tone}`}>{count}</span>
+              <ChevronRight size={15} className="dashboard-quick-chevron"/>
+            </button>;
+          })}
+          {!categories.length&&<p className="dashboard-no-categories">Your solution categories will appear here.</p>}
+        </div>
+      </section>
+
+      <section className="dashboard-brand-card">
+        <span><RotateCcw size={25}/></span>
+        <strong>Save time. Solve faster.</strong>
+        <small>The Last Time Machine</small>
+      </section>
+    </aside>
+  </div>;
 }
+
 function TeamPage({workspace,session,notify}) {
   const [members,setMembers] = useState([]);
   const [loadingMembers,setLoadingMembers] = useState(true);
