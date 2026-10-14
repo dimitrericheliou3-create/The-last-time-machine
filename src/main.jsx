@@ -213,6 +213,10 @@ function App() {
     const clean = workspaceName.trim();
     if (!clean || clean.length > 120) { setSettingsError('Workspace name must be between 1 and 120 characters.'); return; }
     if (!workspace || !supabase) { setSettingsError('Workspace is not available.'); return; }
+    if (workspace.owner_id !== session?.user?.id) {
+      setSettingsError('Only the workspace owner can change the workspace name. Ask the owner to update it in Settings.');
+      return;
+    }
     setSaving(true);
     try {
       const { data, error } = await supabase.from('workspaces').update({ name: clean }).eq('id', workspace.id).select().single();
@@ -417,7 +421,7 @@ function App() {
         {activeNav==='Dashboard' ? <Dashboard solutions={solutions} onNew={()=>setModal({kind:'new'})} onBrowse={()=>setActiveNav('Solutions')} onOpenSolution={s=>{setSelected(s);setModal({kind:'view'});}} onEditSolution={s=>{setSelected(s);setModal({kind:'edit'});}} onDeleteSolution={deleteSolution} /> :
           activeNav==='Team' ? <TeamPage workspace={workspace} session={session} notify={notify} /> :
           activeNav==='Plans' ? <PlansPage notify={notify} workspace={workspace} session={session} /> :
-          activeNav==='Settings' ? <SettingsPage workspace={workspace} workspaceName={workspaceName} setWorkspaceName={setWorkspaceName} onSave={saveWorkspaceName} saving={saving} message={settingsMessage} error={settingsError} onExport={exportSolutions} email={session.user.email} onSignOut={signOut} onDeleteAccount={deleteAccount} deletingAccount={deletingAccount} deleteAccountError={deleteAccountError} /> :
+          activeNav==='Settings' ? <SettingsPage workspace={workspace} canRenameWorkspace={workspace?.owner_id === session.user.id} workspaceName={workspaceName} setWorkspaceName={setWorkspaceName} onSave={saveWorkspaceName} saving={saving} message={settingsMessage} error={settingsError} onExport={exportSolutions} email={session.user.email} onSignOut={signOut} onDeleteAccount={deleteAccount} deletingAccount={deletingAccount} deleteAccountError={deleteAccountError} /> :
           <>
             <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR KNOWLEDGE BASE</div><h1>Solutions <span className="heading-count">{solutions.length}</span></h1><p className="page-subtitle">Every problem solved is a lesson worth keeping.</p><div className="solution-limit-note">{activePlanKey === 'team' ? `Team: ${Math.min(solutions.length, TEAM_SOLUTION_LIMIT)} / ${TEAM_SOLUTION_LIMIT} solutions` : activePlanKey === 'business' ? `Business: ${solutions.length.toLocaleString()} / ${BUSINESS_INCLUDED_SOLUTIONS.toLocaleString()} included solutions` : `Free preview: ${Math.min(solutions.length, FREE_SOLUTION_LIMIT)} / ${FREE_SOLUTION_LIMIT} solutions`}</div>{activePlanKey === 'business' && solutions.length > BUSINESS_INCLUDED_SOLUTIONS && <p className="page-subtitle">Estimated overage: {moneyForOverage((solutions.length - BUSINESS_INCLUDED_SOLUTIONS) * BUSINESS_EXTRA_SOLUTION_MONTHLY_PRICE)} / month for {solutions.length - BUSINESS_INCLUDED_SOLUTIONS} extra solution(s). Overage billing is not active in this preview.</p>}</div><button className="primary-btn" onClick={()=>{if((activePlanKey==='starter'&&solutions.length>=FREE_SOLUTION_LIMIT)||(activePlanKey==='team'&&solutions.length>=TEAM_SOLUTION_LIMIT)){setActiveNav('Plans');notify(activePlanKey==='team'?`Team plan limit reached: ${TEAM_SOLUTION_LIMIT} solutions per workspace.`:`Free preview limit reached: ${FREE_SOLUTION_LIMIT} solutions per workspace.`);return;}setSelected(null);setSaveError('');setModal({kind:'new'});}}><Plus size={18}/> New solution</button></div>
             <div className="welcome-banner"><div className="welcome-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="welcome-clock"><RotateCcw size={25}/></div></div><div className="welcome-copy"><span className="banner-kicker">THE POWER OF NOT STARTING OVER</span><h2>You've solved it before.<br/><span>Find the fix in seconds.</span></h2><p>Document the hard-won knowledge your team shouldn't have to rediscover.</p></div></div>
@@ -544,12 +548,12 @@ function PlansPage({notify}) {
   </>;
 }
 
-function SettingsPage({workspace,workspaceName,setWorkspaceName,onSave,saving,message,error,onExport,email,onSignOut,onDeleteAccount,deletingAccount,deleteAccountError}) {
+function SettingsPage({workspace,canRenameWorkspace,workspaceName,setWorkspaceName,onSave,saving,message,error,onExport,email,onSignOut,onDeleteAccount,deletingAccount,deleteAccountError}) {
   return <><div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> PREFERENCES</div><h1>Settings</h1><p className="page-subtitle">Manage your workspace and take a copy of your knowledge.</p></div></div>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:18,marginTop:24}}>
       <section className="team-placeholder" style={{textAlign:'left',alignItems:'stretch'}}>
         <div className="eyebrow">WORKSPACE</div><h2 style={{marginTop:10}}>Workspace details</h2><p>Give your knowledge base a name your team will recognise.</p>
-        <form onSubmit={onSave} className="solution-form"><label>Workspace name<input value={workspaceName} onChange={e=>setWorkspaceName(e.target.value)} maxLength={120} required placeholder="e.g. Acme Support Team"/></label>{error&&<div className="form-error">{error}</div>}{message&&<div className="form-success">{message}</div>}<button className="primary-btn" disabled={saving}>{saving?'Saving…':<><Check size={16}/> Save workspace</>}</button></form>
+        {canRenameWorkspace ? <form onSubmit={onSave} className="solution-form"><label>Workspace name<input value={workspaceName} onChange={e=>setWorkspaceName(e.target.value)} maxLength={120} required placeholder="e.g. Acme Support Team"/></label>{error&&<div className="form-error" role="alert">{error}</div>}{message&&<div className="form-success">{message}</div>}<button className="primary-btn" disabled={saving}>{saving?'Saving…':<><Check size={16}/> Save workspace</>}</button></form> : <p className="page-subtitle" role="status">Only the workspace owner can change the workspace name. Ask the owner to update it in Settings.</p>}
       </section>
       <section className="team-placeholder" style={{textAlign:'left',alignItems:'stretch'}}>
         <div className="eyebrow">YOUR DATA</div><h2 style={{marginTop:10}}>Export your knowledge</h2><p>Download your saved solutions as a CSV file that opens in Excel or Google Sheets. Keep a backup or use it for reporting.</p><button className="secondary-btn" onClick={onExport}><FileText size={16}/> Export solutions (.csv)</button>
@@ -593,4 +597,3 @@ function Modal({kind,item,categories=[],onClose,onSave,onEdit,onDelete,saving,si
 function timeAgo(date) { if(!date)return 'recently'; const days=Math.max(0,Math.floor((Date.now()-new Date(date).getTime())/86400000)); if(days===0)return 'today';if(days===1)return 'yesterday';if(days<7)return `${days} days ago`;if(days<30)return `${Math.floor(days/7)}w ago`;return new Date(date).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
 
 createRoot(document.getElementById('root')).render(<App/>);
-
