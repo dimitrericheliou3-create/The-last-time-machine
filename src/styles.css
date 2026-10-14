@@ -3302,19 +3302,47 @@ body,.auth-shell,.loading-screen {
 }
 
 
-/* Brand clock: a continuous counter-clockwise spin, including the loading and legal marks. */
-.brand-mark .brand-clock-icon,
-.loading-screen .brand-mark .brand-clock-icon {
-  animation: brand-clock-reverse 3.6s linear infinite;
-  transform-origin: center;
+/* Clock face stays fixed; the two hands take turns rotating counter-clockwise. */
+.brand-mark .brand-clock {
+  display: inline-grid;
+  place-items: center;
+  line-height: 0;
 }
-@keyframes brand-clock-reverse {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(-360deg); }
+.brand-mark .brand-clock svg {
+  display: block;
+  overflow: visible;
+}
+.brand-mark .brand-clock-hour-hand,
+.brand-mark .brand-clock-minute-hand {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+  animation-duration: 5s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.brand-mark .brand-clock-minute-hand {
+  animation-name: brand-minute-reverse;
+}
+.brand-mark .brand-clock-hour-hand {
+  animation-name: brand-hour-reverse;
+}
+@keyframes brand-minute-reverse {
+  0% { transform: rotate(0deg); }
+  40% { transform: rotate(-360deg); }
+  40.01%, 100% { transform: rotate(-360deg); }
+}
+@keyframes brand-hour-reverse {
+  0%, 50% { transform: rotate(0deg); }
+  90% { transform: rotate(-360deg); }
+  90.01%, 100% { transform: rotate(-360deg); }
+}
+/* The loading screen used to rotate every SVG inside the logo; keep its face still too. */
+.loading-screen .brand-mark svg {
+  animation: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
-  .brand-mark .brand-clock-icon,
-  .loading-screen .brand-mark .brand-clock-icon {
-    animation: none;
+  .brand-mark .brand-clock-hour-hand,
+  .brand-mark .brand-clock-minute-hand {
+    animation: none !important;
   }
 }
