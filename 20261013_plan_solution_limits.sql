@@ -8,7 +8,7 @@ create or replace function public.enforce_plan_solution_limits()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   active_plan text := 'starter';
