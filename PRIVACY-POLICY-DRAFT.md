@@ -6,7 +6,7 @@
 **Privacy contact:** richelieureserved@gmail.com  
 
 ## 1. Information processed
-Depending on use, the service processes your email address and authentication identifiers; workspace name and membership; solution titles, problem descriptions, categories, steps, outcomes, and uploaded reference images; and basic technical information needed to operate and protect the service. Do not submit highly sensitive information the service is not designed to handle.
+Depending on use, the service processes your email address and authentication identifiers; your display name, optional unique username and bio, and profile picture; workspace name and membership; solution titles, problem descriptions, categories, steps, outcomes, and uploaded reference images; the last recorded time your account actively used the app; and basic technical information needed to operate and protect the service. Profile pictures are stored in a private bucket and shown through short-lived signed links. Your profile name, username, bio, and picture can be seen by people who share a workspace with you. Do not submit highly sensitive information the service is not designed to handle.
 
 ## 2. Purposes
 Information is used to create and secure accounts, provide workspaces and knowledge-base features, support search and export, administer invitations, prevent abuse, maintain reliability, and respond to support requests.
