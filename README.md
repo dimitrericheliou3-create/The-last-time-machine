@@ -191,3 +191,20 @@ The Starter/free preview allows up to **10 saved solutions per workspace**. The 
 - Business: 2,500 saved solutions included; additional stored solutions are priced at $0.05 per extra solution per month.
 - Business overage is currently shown as an estimate only. The current checkout is a mock preview, so no payment or overage charge is collected. Do not advertise automated overage billing until metered billing, usage snapshots, proration, cancellations, failed payments, and webhook reconciliation are implemented and tested.
 - Apply `supabase/migrations/20261013_plan_solution_limits.sql` before deploying the app. The database enforces Starter and Team caps; Business overage collection is not yet implemented.
+
+
+## Eight-month account inactivity policy (prepared, not activated)
+
+The live database now records foreground account activity in `public.profiles.last_active_at`, throttled to at most one update per hour through the `record_user_activity()` RPC. The app calls this when the signed-in user opens or returns to the app. Existing profiles were baselined at rollout, so prior inactivity won't trigger deletion immediately.
+
+The `account-inactivity-sweep` Edge Function is deployed but **automatic deletion is not scheduled or enabled yet**. It requires an authorization secret and a verified email-sending setup. It is safe by default: requests run in dry-run mode unless the caller explicitly sends `{"dry_run":false}`. Do not schedule a destructive run until reminder emails are configured and a dry-run has been reviewed.
+
+Required Edge Function secrets:
+- `INACTIVITY_CRON_SECRET`: a long random secret used only by the scheduler and this function.
+- `RESEND_API_KEY`: API key for the chosen Resend account.
+- `INACTIVITY_FROM_EMAIL`: a sender address verified in Resend.
+- `APP_URL`: optional; defaults to `https://the-last-time-machine.pages.dev`.
+
+The scheduler must invoke `POST /functions/v1/account-inactivity-sweep` once per day with `Authorization: Bearer <INACTIVITY_CRON_SECRET>` and JSON body `{"dry_run":true}` for an initial observation period. Only after the candidate list and notices have been reviewed should the scheduled body change to `{"dry_run":false}`. Store the cron credential in Supabase Vault and do not commit it to GitHub or paste it into source code. The final warning must be recorded at least seven days before an account can be deleted.
+
+Safeguards: account activity warnings are staged at roughly 30, 15, and 7 days before the eight-month deadline; accounts owning a workspace with other members or an active/past-due subscription are protected from automatic deletion; sole-member workspaces owned by an eligible inactive account may be deleted; shared-workspace solutions are retained and their author attribution reassigned. Database/storage/Auth deletion spans multiple services and is not one atomic transaction, so the sweep must be monitored before commercial use. The inactivity policy is not operational until secrets, a verified sender, and a scheduled job are all configured and tested.
