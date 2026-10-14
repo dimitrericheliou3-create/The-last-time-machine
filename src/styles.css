@@ -709,3 +709,46 @@ button:disabled{filter:saturate(.5)}
 @media(max-width:1020px){.theme-preset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:620px){.theme-preset-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.theme-preview{height:65px}.appearance-panel{padding:17px!important}}
 @media(prefers-reduced-motion:reduce){.app-shell[data-theme]{transition:none}.theme-preset{transition:none}}
+
+
+/* Light theme icon harmony */
+.app-shell[data-theme="light"] .brand-mark,
+.app-shell[data-theme="light"] .welcome-clock {
+  background:linear-gradient(145deg,#a5ad90,#78866d);
+  box-shadow:0 7px 22px rgba(102,119,86,.14);
+}
+.app-shell[data-theme="light"] .workspace-avatar,
+.app-shell[data-theme="light"] .top-avatar,
+.app-shell[data-theme="light"] .workspace-create-icon {
+  background:#e9ecdf;
+  color:#68765c;
+  border-color:#d9dfcd;
+}
+.app-shell[data-theme="light"] .help-icon,
+.app-shell[data-theme="light"] .empty-icon,
+.app-shell[data-theme="light"] .benefit-icon,
+.app-shell[data-theme="light"] .auth-card-icon {
+  background:#eff0e7;
+  border-color:#dfe2d5;
+  color:#68765c;
+}
+.app-shell[data-theme="light"] .stat-icon.blue,
+.app-shell[data-theme="light"] .stat-icon.violet,
+.app-shell[data-theme="light"] .stat-icon.green,
+.app-shell[data-theme="light"] .category-icon.blue,
+.app-shell[data-theme="light"] .category-icon.violet,
+.app-shell[data-theme="light"] .category-icon.green,
+.app-shell[data-theme="light"] .category-icon.amber {
+  background:#eff0e7;
+  color:#68765c;
+}
+.app-shell[data-theme="light"] .stat-spark,
+.app-shell[data-theme="light"] .banner-sparkle {
+  color:#a5ad90;
+}
+.app-shell[data-theme="light"] .profile-preview-cover {
+  background:radial-gradient(ellipse at 70% 10%,#a5ad9038 0,transparent 55%),linear-gradient(125deg,#eeeae0,#fffdf8);
+}
+.app-shell[data-theme="light"] .theme-preview-light .theme-preview-main i:first-child {
+  background:#dfe4d4;
+}
