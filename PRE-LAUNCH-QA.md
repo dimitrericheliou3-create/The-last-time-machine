@@ -49,3 +49,17 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [ ] Apply the migration to the target Supabase project before deploying the UI.
 - [ ] Test Starter 10 / 11th rejected, Team 500 / 501st rejected, Business 2,500 / 2,501st allowed, and edits/deletions at each threshold.
 - [ ] Implement and test actual metered overage billing before charging Business customers; current checkout is a non-payment preview.
+
+
+## Eight-month account inactivity deletion (prepared, not activated)
+- [x] Add `profiles.last_active_at` and a rate-limited `record_user_activity()` RPC.
+- [x] Record activity when the signed-in app opens or returns to the foreground.
+- [x] Deploy `account-inactivity-sweep` with custom bearer-secret checks and dry-run-by-default behavior.
+- [x] Add reminder history and Terms/Privacy copy for an eight-month inactivity window.
+- [x] Protect accounts that own workspaces with other members or active/past-due subscriptions; preserve shared-workspace solution content for remaining members.
+- [ ] Configure `INACTIVITY_CRON_SECRET`, `RESEND_API_KEY`, and a verified `INACTIVITY_FROM_EMAIL` in Supabase Edge Function secrets.
+- [ ] Configure a daily scheduler that calls `POST /functions/v1/account-inactivity-sweep` with the bearer secret and `{"dry_run":true}`; review logs/results for at least several runs.
+- [ ] Verify all three notices arrive at 30, 15, and 7 days before the eight-month deadline; confirm sign-in resets the timer.
+- [ ] Only after testing reminders and reviewing dry-run results, explicitly switch the scheduler body to `{"dry_run":false}`.
+- [ ] Test deletion against a disposable account with a sole-member workspace; verify image cleanup and deletion. Test separately that a shared-workspace owner and an account with an active/past-due subscription are protected.
+- [ ] Monitor the scheduled function and logs. Auth, database, and storage cleanup span multiple services and are not one atomic transaction.
