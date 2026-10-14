@@ -62,6 +62,10 @@ function App() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileLoadError, setProfileLoadError] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
+  const [themeKey, setThemeKey] = useState('dark');
+  const [themeSaving, setThemeSaving] = useState(false);
+  const [themeError, setThemeError] = useState('');
+  const [themeMessage, setThemeMessage] = useState('');
   const workspaceMenuRef = useRef(null);
   const [hasPaidPlan, setHasPaidPlan] = useState(false);
   const [activePlanKey, setActivePlanKey] = useState('starter');
@@ -128,13 +132,16 @@ function App() {
       if (!supabase || !session?.user?.id) {
         setProfile(null);
         setProfileLoadError('');
+        setThemeKey('dark');
+        setThemeError('');
+        setThemeMessage('');
         return;
       }
       setProfileLoading(true);
       setProfileLoadError('');
       try {
         const { data, error } = await supabase.from('profiles')
-          .select('user_id,display_name,email,username,bio,avatar_path,updated_at')
+          .select('user_id,display_name,email,username,bio,avatar_path,theme_key,updated_at')
           .eq('user_id', session.user.id).single();
         if (error) throw error;
         let avatarUrl = null;
@@ -142,10 +149,15 @@ function App() {
           const { data: signed, error: signedError } = await supabase.storage.from('profile-avatars').createSignedUrl(data.avatar_path, 3600);
           if (!signedError) avatarUrl = signed?.signedUrl || null;
         }
-        if (alive) setProfile({ ...data, avatarUrl });
+        if (alive) {
+          const savedTheme = ['dark','midnight','forest','plum','light'].includes(data.theme_key) ? data.theme_key : 'dark';
+          setThemeKey(savedTheme);
+          setProfile({ ...data, theme_key: savedTheme, avatarUrl });
+        }
       } catch (e) {
         if (alive) {
           setProfileLoadError(e.message || 'Could not load your profile.');
+          setThemeKey('dark');
           setProfile({
             user_id: session.user.id,
             display_name: session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Workspace member',
@@ -153,6 +165,7 @@ function App() {
             username: null,
             bio: null,
             avatar_path: null,
+            theme_key: 'dark',
             avatarUrl: null
           });
         }
@@ -339,6 +352,38 @@ function App() {
       setCreateWorkspaceError(e.message || 'Could not create the workspace.');
     } finally {
       setCreatingWorkspace(false);
+    }
+  }
+
+  async function changeTheme(nextTheme) {
+    const validThemes = ['dark','midnight','forest','plum','light'];
+    if (!validThemes.includes(nextTheme) || nextTheme === themeKey || themeSaving) return;
+    if (!supabase || !session?.user?.id) {
+      setThemeError('Sign in to save your color scheme to your account.');
+      return;
+    }
+    const previousTheme = themeKey;
+    setThemeKey(nextTheme);
+    setThemeSaving(true);
+    setThemeError('');
+    setThemeMessage('');
+    try {
+      const { data, error } = await supabase.from('profiles')
+        .update({ theme_key: nextTheme })
+        .eq('user_id', session.user.id)
+        .select('theme_key').single();
+      if (error) throw error;
+      const savedTheme = validThemes.includes(data?.theme_key) ? data.theme_key : nextTheme;
+      setThemeKey(savedTheme);
+      setProfile(current => current ? { ...current, theme_key: savedTheme } : current);
+      setThemeMessage('Saved to your account.');
+      notify('Color scheme saved');
+    } catch (e) {
+      setThemeKey(previousTheme);
+      setThemeError(e.message || 'Could not save the color scheme. Your previous theme has been restored.');
+      setThemeMessage('');
+    } finally {
+      setThemeSaving(false);
     }
   }
 
@@ -691,7 +736,7 @@ function App() {
   if (!session) return <AuthScreen configured={!!supabase} onResetPassword={requestPasswordReset} mode={authMode} setMode={setAuthMode} email={authEmail} setEmail={setAuthEmail} password={authPassword} setPassword={setAuthPassword} showPassword={showPassword} setShowPassword={setShowPassword} submit={submitAuth} message={authMessage} error={authError} saving={saving} legalAccepted={legalAccepted} setLegalAccepted={setLegalAccepted} />;
   if (inviteToken) return <div className="loading-screen"><div className="auth-card" style={{maxWidth:480, width:'calc(100% - 32px)', padding:32}}><div className="auth-card-icon"><Users size={22}/></div><div className="auth-overline">WORKSPACE INVITATION</div><h2>Join a team workspace</h2><p>Accepting this invitation will add the signed-in, email-confirmed account to the invited workspace. Invitation links expire after seven days and can only be used by the invited email address.</p>{inviteActionError&&<div className="form-error" role="alert">{inviteActionError}</div>}<button className="primary-btn" style={{width:'100%',justifyContent:'center'}} onClick={acceptWorkspaceInvite} disabled={inviteActionLoading}>{inviteActionLoading?'Verifying invitation…':'Accept invitation'}</button><button className="secondary-btn" style={{width:'100%',justifyContent:'center',marginTop:10}} onClick={()=>{window.history.replaceState({},'',window.location.pathname);setInviteToken('');}} disabled={inviteActionLoading}>Not now</button></div></div>;
 
-  return <div className="app-shell">
+  return <div className="app-shell" data-theme={themeKey}>
     <aside className={`sidebar ${mobileNav?'sidebar-open':''}`}>
       <div className="brand"><div className="brand-mark"><RotateCcw size={20}/></div><div className="brand-name">The Last <span>Time Machine</span><small>REAL PROBLEMS. REAL FIXES.</small></div><button className="icon-btn mobile-close" onClick={()=>setMobileNav(false)}><X size={18}/></button></div>
       <div className="workspace-picker" ref={workspaceMenuRef}>
@@ -776,7 +821,7 @@ function App() {
           activeNav==='Team' ? <TeamPage workspace={workspace} session={session} notify={notify} /> :
           activeNav==='Plans' ? <PlansPage notify={notify} workspace={workspace} session={session} /> :
           activeNav==='Profile' ? <ProfilePage profile={profile} email={session.user.email} loading={profileLoading} loadError={profileLoadError} saving={profileSaving} onSave={saveProfile} notify={notify} /> :
-          activeNav==='Settings' ? <SettingsPage workspace={workspace} canRenameWorkspace={workspace?.owner_id === session.user.id} workspaceName={workspaceName} setWorkspaceName={setWorkspaceName} onSave={saveWorkspaceName} saving={saving} message={settingsMessage} error={settingsError} onExport={exportSolutions} email={session.user.email} onSignOut={signOut} onDeleteAccount={deleteAccount} deletingAccount={deletingAccount} deleteAccountError={deleteAccountError} /> :
+          activeNav==='Settings' ? <SettingsPage workspace={workspace} canRenameWorkspace={workspace?.owner_id === session.user.id} workspaceName={workspaceName} setWorkspaceName={setWorkspaceName} onSave={saveWorkspaceName} saving={saving} message={settingsMessage} error={settingsError} onExport={exportSolutions} email={session.user.email} onSignOut={signOut} onDeleteAccount={deleteAccount} deletingAccount={deletingAccount} deleteAccountError={deleteAccountError} themeKey={themeKey} onThemeChange={changeTheme} themeSaving={themeSaving} themeError={themeError} themeMessage={themeMessage} /> :
           <>
             <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR KNOWLEDGE BASE</div><h1>Solutions <span className="heading-count">{solutions.length}</span></h1><p className="page-subtitle">Every problem solved is a lesson worth keeping.</p><div className="solution-limit-note">{activePlanKey === 'team' ? `Team: ${Math.min(solutions.length, TEAM_SOLUTION_LIMIT)} / ${TEAM_SOLUTION_LIMIT} solutions` : activePlanKey === 'business' ? `Business: ${solutions.length.toLocaleString()} / ${BUSINESS_INCLUDED_SOLUTIONS.toLocaleString()} included solutions` : `Free preview: ${Math.min(solutions.length, FREE_SOLUTION_LIMIT)} / ${FREE_SOLUTION_LIMIT} solutions`}</div>{activePlanKey === 'business' && solutions.length > BUSINESS_INCLUDED_SOLUTIONS && <p className="page-subtitle">Estimated overage: {moneyForOverage((solutions.length - BUSINESS_INCLUDED_SOLUTIONS) * BUSINESS_EXTRA_SOLUTION_MONTHLY_PRICE)} / month for {solutions.length - BUSINESS_INCLUDED_SOLUTIONS} extra solution(s). Overage billing is not active in this preview.</p>}</div><button className="primary-btn" onClick={()=>{if((activePlanKey==='starter'&&solutions.length>=FREE_SOLUTION_LIMIT)||(activePlanKey==='team'&&solutions.length>=TEAM_SOLUTION_LIMIT)){setActiveNav('Plans');notify(activePlanKey==='team'?`Team plan limit reached: ${TEAM_SOLUTION_LIMIT} solutions per workspace.`:`Free preview limit reached: ${FREE_SOLUTION_LIMIT} solutions per workspace.`);return;}setSelected(null);setSaveError('');setModal({kind:'new'});}}><Plus size={18}/> New solution</button></div>
             <div className="welcome-banner"><div className="welcome-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="welcome-clock"><RotateCcw size={25}/></div></div><div className="welcome-copy"><span className="banner-kicker">THE POWER OF NOT STARTING OVER</span><h2>You've solved it before.<br/><span>Find the fix in seconds.</span></h2><p>Document the hard-won knowledge your team shouldn't have to rediscover.</p></div></div>
@@ -1122,9 +1167,40 @@ function ProfilePage({profile,email,loading,loadError,saving,onSave}) {
   </>;
 }
 
-function SettingsPage({workspace,canRenameWorkspace,workspaceName,setWorkspaceName,onSave,saving,message,error,onExport,email,onSignOut,onDeleteAccount,deletingAccount,deleteAccountError}) {
-  return <><div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> PREFERENCES</div><h1>Settings</h1><p className="page-subtitle">Manage your workspace and take a copy of your knowledge.</p></div></div>
+function SettingsPage({workspace,canRenameWorkspace,workspaceName,setWorkspaceName,onSave,saving,message,error,onExport,email,onSignOut,onDeleteAccount,deletingAccount,deleteAccountError,themeKey,onThemeChange,themeSaving,themeError,themeMessage}) {
+  const themePresets = [
+    {key:'dark',name:'Dark',description:'Original blue-accented dark theme',swatches:['#0b1220','#15233a','#6895ff']},
+    {key:'midnight',name:'Midnight',description:'Deep navy with bright cyan accents',swatches:['#081321','#122640','#55c7ff']},
+    {key:'forest',name:'Forest',description:'Dark evergreen with mint accents',swatches:['#0b1713','#172d24','#69d8a2']},
+    {key:'plum',name:'Plum',description:'Dark violet with lavender accents',swatches:['#140f20','#29203c','#b6a0ff']},
+    {key:'light',name:'Light',description:'Bright surfaces with indigo accents',swatches:['#f3f6fc','#ffffff','#496fe8']}
+  ];
+  return <><div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> PREFERENCES</div><h1>Settings</h1><p className="page-subtitle">Manage your workspace, appearance, and account.</p></div></div>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:18,marginTop:24}}>
+      <section className="team-placeholder appearance-panel" style={{textAlign:'left',alignItems:'stretch'}}>
+        <div className="eyebrow">APPEARANCE</div><h2 style={{marginTop:10}}>Color scheme</h2><p>Choose the colours you prefer. This setting follows your account across your workspaces and devices.</p>
+        <div className="theme-preset-grid" role="group" aria-label="Color scheme presets">
+          {themePresets.map(preset=><button
+            key={preset.key}
+            type="button"
+            className={`theme-preset ${themeKey===preset.key?'selected':''}`}
+            onClick={()=>onThemeChange(preset.key)}
+            disabled={themeSaving}
+            aria-pressed={themeKey===preset.key}
+          >
+            <span className={`theme-preview theme-preview-${preset.key}`}>
+              <span className="theme-preview-sidebar"></span>
+              <span className="theme-preview-main"><i></i><i></i><i></i></span>
+            </span>
+            <span className="theme-preset-copy"><strong>{preset.name}</strong><small>{preset.description}</small></span>
+            <span className="theme-swatch-row">{preset.swatches.map(color=><i key={color} style={{backgroundColor:color}}></i>)}</span>
+            {themeKey===preset.key&&<span className="theme-preset-check"><Check size={15}/></span>}
+          </button>)}
+        </div>
+        {themeSaving&&<p className="theme-status" role="status">Saving your preference…</p>}
+        {!themeSaving&&themeMessage&&<p className="theme-status theme-status-success" role="status">{themeMessage}</p>}
+        {themeError&&<div className="form-error" role="alert">{themeError}</div>}
+      </section>
       <section className="team-placeholder" style={{textAlign:'left',alignItems:'stretch'}}>
         <div className="eyebrow">WORKSPACE</div><h2 style={{marginTop:10}}>Workspace details</h2><p>Give your knowledge base a name your team will recognise.</p>
         {canRenameWorkspace ? <form onSubmit={onSave} className="solution-form"><label>Workspace name<input value={workspaceName} onChange={e=>setWorkspaceName(e.target.value)} maxLength={120} required placeholder="e.g. Acme Support Team"/></label>{error&&<div className="form-error" role="alert">{error}</div>}{message&&<div className="form-success">{message}</div>}<button className="primary-btn" disabled={saving}>{saving?'Saving…':<><Check size={16}/> Save workspace</>}</button></form> : <p className="page-subtitle" role="status">Only the workspace owner can change the workspace name. Ask the owner to update it in Settings.</p>}
