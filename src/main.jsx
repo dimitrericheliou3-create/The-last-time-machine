@@ -995,8 +995,8 @@ function PlansPage({notify}) {
   const [cardName,setCardName] = useState('');
   const [showCheckout,setShowCheckout] = useState(false);
   const plans = [
-    {key:'starter',name:'Starter',monthly:0,annual:0,description:'Free preview with a small knowledge-base allowance',features:['One workspace','Up to 10 saved solutions','Search and organise solutions','CSV export'],current:true},
-    {key:'team',name:'Team',monthly:20,annual:200,description:'For teams that need a reliable shared knowledge base',features:['Up to 500 saved solutions per workspace','Shared team workspace','Searchable solutions and reference images','CSV export and workspace settings'],current:false},
+    {key:'starter',name:'Starter',monthly:0,annual:0,description:'Free preview with a small knowledge-base allowance',features:['Multiple workspaces during preview','Up to 10 saved solutions per workspace','Search and organise solutions','CSV export'],current:true},
+    {key:'team',name:'Team',monthly:20,annual:200,description:'For teams that need a reliable shared knowledge base',features:['Up to 500 saved solutions per workspace','Team invitations and access permissions','Searchable solutions and reference images','CSV export and workspace settings'],current:false},
     {key:'business',name:'Business',monthly:39,annual:390,description:'For teams documenting more of their operations',features:['Everything in Team','2,500 saved solutions included','Additional solutions: $0.05 per solution per month','No hard cap on solution count'],current:false}
   ];
   const money = (amount) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
