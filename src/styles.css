@@ -3279,3 +3279,24 @@ body,.auth-shell,.loading-screen {
 .app-shell[data-theme="midnight"] .dashboard-side-card > h2 svg {
   color: #55c7ff;
 }
+
+
+/* Static account identity: profile actions live in the top bar only. */
+.app-shell .sidebar-bottom > .profile-row-static {
+  width: 100%;
+  border: 1px solid var(--theme-border, #263a56);
+  border-radius: 9px;
+  background: var(--theme-panel, #111d30);
+  color: var(--theme-text, inherit);
+  cursor: default;
+}
+.app-shell .profile-row-static .profile-avatar {
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.app-shell .profile-row-static .profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
