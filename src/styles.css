@@ -3253,3 +3253,29 @@ body,.auth-shell,.loading-screen {
     padding: 22px;
   }
 }
+
+
+/* Midnight preset: unify Quick Actions icon tiles with the deep navy / cyan palette. */
+.app-shell[data-theme="midnight"] .dashboard-quick-icon,
+.app-shell[data-theme="midnight"] .dashboard-quick-icon.tone-blue,
+.app-shell[data-theme="midnight"] .dashboard-quick-icon.tone-green,
+.app-shell[data-theme="midnight"] .dashboard-quick-icon.tone-violet,
+.app-shell[data-theme="midnight"] .dashboard-quick-icon.tone-orange,
+.app-shell[data-theme="midnight"] .dashboard-quick-icon.tone-teal {
+  background: #15364f;
+  border: 1px solid #254b67;
+  color: #82d8ff;
+}
+.app-shell[data-theme="midnight"] .dashboard-quick-action:hover:not(:disabled) .dashboard-quick-icon {
+  background: #1b4562;
+  border-color: #347093;
+  color: #b5eaff;
+}
+.app-shell[data-theme="midnight"] .dashboard-quick-action:focus-visible {
+  outline: 2px solid #55c7ff;
+  outline-offset: 3px;
+  border-radius: 9px;
+}
+.app-shell[data-theme="midnight"] .dashboard-side-card > h2 svg {
+  color: #55c7ff;
+}
