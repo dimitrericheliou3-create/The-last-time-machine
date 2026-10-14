@@ -2330,3 +2330,89 @@ body,.auth-shell,.loading-screen {
     display: none;
   }
 }
+
+
+/* Preserve each of the optional dark palettes with the new dashboard cards. */
+.app-shell[data-theme="midnight"] .dashboard-metric-card,
+.app-shell[data-theme="midnight"] .dashboard-recent-list,
+.app-shell[data-theme="midnight"] .dashboard-side-card,
+.app-shell[data-theme="midnight"] .dashboard-brand-card,
+.app-shell[data-theme="forest"] .dashboard-metric-card,
+.app-shell[data-theme="forest"] .dashboard-recent-list,
+.app-shell[data-theme="forest"] .dashboard-side-card,
+.app-shell[data-theme="forest"] .dashboard-brand-card,
+.app-shell[data-theme="plum"] .dashboard-metric-card,
+.app-shell[data-theme="plum"] .dashboard-recent-list,
+.app-shell[data-theme="plum"] .dashboard-side-card,
+.app-shell[data-theme="plum"] .dashboard-brand-card {
+  background: var(--theme-panel);
+  border-color: var(--theme-border);
+  color: var(--theme-text);
+}
+.app-shell[data-theme="midnight"] .dashboard-metric-card strong,
+.app-shell[data-theme="midnight"] .dashboard-section-heading h2,
+.app-shell[data-theme="midnight"] .dashboard-side-card > h2,
+.app-shell[data-theme="midnight"] .dashboard-row-title,
+.app-shell[data-theme="midnight"] .dashboard-quick-copy strong,
+.app-shell[data-theme="midnight"] .dashboard-category-name,
+.app-shell[data-theme="forest"] .dashboard-metric-card strong,
+.app-shell[data-theme="forest"] .dashboard-section-heading h2,
+.app-shell[data-theme="forest"] .dashboard-side-card > h2,
+.app-shell[data-theme="forest"] .dashboard-row-title,
+.app-shell[data-theme="forest"] .dashboard-quick-copy strong,
+.app-shell[data-theme="forest"] .dashboard-category-name,
+.app-shell[data-theme="plum"] .dashboard-metric-card strong,
+.app-shell[data-theme="plum"] .dashboard-section-heading h2,
+.app-shell[data-theme="plum"] .dashboard-side-card > h2,
+.app-shell[data-theme="plum"] .dashboard-row-title,
+.app-shell[data-theme="plum"] .dashboard-quick-copy strong,
+.app-shell[data-theme="plum"] .dashboard-category-name {
+  color: var(--theme-text);
+}
+.app-shell[data-theme="midnight"] .dashboard-metric-label,
+.app-shell[data-theme="midnight"] .dashboard-metric-card small,
+.app-shell[data-theme="midnight"] .dashboard-section-heading p,
+.app-shell[data-theme="midnight"] .dashboard-row-content p,
+.app-shell[data-theme="midnight"] .dashboard-row-time,
+.app-shell[data-theme="midnight"] .dashboard-quick-copy small,
+.app-shell[data-theme="forest"] .dashboard-metric-label,
+.app-shell[data-theme="forest"] .dashboard-metric-card small,
+.app-shell[data-theme="forest"] .dashboard-section-heading p,
+.app-shell[data-theme="forest"] .dashboard-row-content p,
+.app-shell[data-theme="forest"] .dashboard-row-time,
+.app-shell[data-theme="forest"] .dashboard-quick-copy small,
+.app-shell[data-theme="plum"] .dashboard-metric-label,
+.app-shell[data-theme="plum"] .dashboard-metric-card small,
+.app-shell[data-theme="plum"] .dashboard-section-heading p,
+.app-shell[data-theme="plum"] .dashboard-row-content p,
+.app-shell[data-theme="plum"] .dashboard-row-time,
+.app-shell[data-theme="plum"] .dashboard-quick-copy small {
+  color: var(--theme-muted);
+}
+.app-shell[data-theme="midnight"] .dashboard-brand-card {
+  background: linear-gradient(145deg,#102640,#0d1b2d);
+  color: var(--theme-text);
+}
+.app-shell[data-theme="forest"] .dashboard-brand-card {
+  background: linear-gradient(145deg,#172d24,#11231b);
+  color: var(--theme-text);
+}
+.app-shell[data-theme="plum"] .dashboard-brand-card {
+  background: linear-gradient(145deg,#29203c,#20182f);
+  color: var(--theme-text);
+}
+.app-shell[data-theme="midnight"] .dashboard-brand-card small,
+.app-shell[data-theme="forest"] .dashboard-brand-card small,
+.app-shell[data-theme="plum"] .dashboard-brand-card small {
+  color: var(--theme-muted);
+}
+@media (max-width: 760px) {
+  .app-shell .dashboard-global-search {
+    flex: 1 1 auto;
+    width: auto;
+    margin-left: 0;
+  }
+  .app-shell .dashboard-global-search input {
+    width: 100%;
+  }
+}
