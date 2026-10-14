@@ -6,9 +6,12 @@ A React + Vite web app for recording and searching business troubleshooting know
 
 - Email/password account creation and sign-in through Supabase Auth
 - Creates a private workspace; the database trigger creates the owner membership
+- Workspace picker lists all workspaces for the signed-in account and can create/switch workspaces without requiring a second account
+- Account profile page with display name, unique optional username, short bio, and private profile picture; teammate handles and pictures are visible only inside shared workspaces
 - Lists saved solutions from Supabase
 - Creates, edits, and deletes solutions
-- Workspace name settings
+- Workspace name settings and isolated workspace data/permissions when switching between workspaces
+- Private profile avatar storage with per-account upload permissions, signed image URLs, and username uniqueness enforced by the database
 - CSV export with UTF-8/newline formatting and spreadsheet-formula injection mitigation
 - Export saved solutions to CSV for backup or spreadsheet analysis
 - Password reset email request and a dedicated password-update screen for recovery links
@@ -69,6 +72,16 @@ Save failures now remain visible inside the solution form instead of only appear
 - Billing foundations include a private subscription-status table, webhook-event idempotency table, owner/admin checkout authorization, server-controlled prices, and HMAC signature verification. Subscription entitlement enforcement and a complete billing-management/cancellation UI still require additional work before selling paid access.
 - AI-assisted answers are not active yet; do not market this feature as available until a grounded retrieval workflow and safeguards are implemented.
 
+
+## Workspace and profile migrations
+
+The current Supabase project already has the workspace-creation policy and owner-membership trigger, and the profile/avatar changes have been applied. When setting up another Supabase project, review and apply the migrations for your intended deployment, including:
+
+- `20261014000300_create_profile_avatars_and_usernames.sql`
+- `20261014000400_add_profiles_updated_at_trigger.sql`
+- `20261014000500_allow_teammate_profile_avatars.sql`
+
+The `profile-avatars` bucket is private. Profile pictures are stored under the signed-in user's ID and delivered with short-lived signed URLs. Do not make this bucket public.
 
 ## Optional solution images
 
