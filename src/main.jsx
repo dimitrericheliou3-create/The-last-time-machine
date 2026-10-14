@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import {
   Search, Plus, Clock3, LayoutDashboard, BookOpen, Users, Settings, LogOut, ImagePlus,
-  ArrowUpRight, ChevronDown, Command, Lightbulb, ShieldCheck, Zap, X, Check,
+  ChevronDown, Command, Lightbulb, ShieldCheck, Zap, X, Check,
   CircleHelp, Filter, MoreHorizontal, Pencil, Trash2, Menu, ArrowRight,
   FileText, Activity, LockKeyhole, Mail, Eye, EyeOff, RotateCcw,
   UserRound, Camera, AtSign, Save, Home, Folder, Bell, ChevronRight, Globe,
@@ -841,16 +841,11 @@ function App() {
         <button className={`nav-item ${activeNav==='Settings'?'active':''}`} onClick={()=>{setActiveNav('Settings');setWorkspaceName(workspace?.name||'');setSettingsMessage('');setSettingsError('');setMobileNav(false);}}><Settings size={19}/><span>Settings</span></button>
         <button className="nav-item" onClick={()=>{setMobileNav(false);window.location.href='mailto:richelieureserved@gmail.com?subject=The%20Last%20Time%20Machine%20support';}}><CircleHelp size={19}/><span>Help</span></button>
       </nav>      <div className="sidebar-bottom">
-        <button
-          type="button"
-          className={`profile-row profile-row-button ${activeNav==='Profile'?'active':''}`}
-          onClick={()=>{setActiveNav('Profile');setMobileNav(false);}}
-          aria-label="Open your profile"
-        >
+        <div className="profile-row profile-row-static">
           <span className="profile-avatar">{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:initials(profile?.display_name||session.user.email||'U')}</span>
           <span className="profile-info"><strong>{profile?.display_name||session.user.email?.split('@')[0]}</strong><span>{activePlanKey==='team'?'Team Plan':activePlanKey==='business'?'Business Plan':'Free Plan'}</span></span>
           <ChevronRight size={15} className="profile-chevron"/>
-        </button>
+        </div>
       </div>
     </aside>
     {mobileNav&&<div className="scrim" onClick={()=>setMobileNav(false)} />}
@@ -875,7 +870,6 @@ function App() {
             setQuery={setQuery}
             onNew={()=>{if(!canCreateSolution){setActiveNav('Plans');notify(activePlanKey==='team'?`Team plan limit reached: ${TEAM_SOLUTION_LIMIT} solutions per workspace.`:`Free preview limit reached: ${FREE_SOLUTION_LIMIT} solutions per workspace.`);return;}setSelected(null);setSaveError('');setModal({kind:'new'});}}
             onCreateWorkspace={()=>{setCreateWorkspaceError('');setCreateWorkspaceName('');setCreateWorkspaceOpen(true);}}
-            onTeam={()=>setActiveNav('Team')}
             onBrowse={chosenCategory=>{setCategory(chosenCategory||'__all__');setQuery('');setActiveNav('Solutions');}}
             onOpenSolution={s=>{setSelected(s);setModal({kind:'view'});}}
             onEditSolution={s=>{setSelected(s);setModal({kind:'edit'});}}
@@ -942,15 +936,6 @@ function App() {
                   <span className="solutions-capture-icon"><Lightbulb size={20}/></span>
                   <h2>Keep the next fix</h2>
                   <p>Record what went wrong, the steps that worked, and the result—so nobody has to solve it twice.</p>
-                  <button type="button" className="secondary-btn" onClick={()=>{
-                    if(!canCreateSolution){notify('Your workspace owner has not granted permission to create solutions.');return;}
-                    if((activePlanKey==='starter'&&solutions.length>=FREE_SOLUTION_LIMIT)||(activePlanKey==='team'&&solutions.length>=TEAM_SOLUTION_LIMIT)){
-                      setActiveNav('Plans');
-                      notify(activePlanKey==='team'?'Team plan limit reached: '+TEAM_SOLUTION_LIMIT+' solutions per workspace.':'Free preview limit reached: '+FREE_SOLUTION_LIMIT+' solutions per workspace.');
-                      return;
-                    }
-                    setSelected(null);setSaveError('');setModal({kind:'new'});
-                  }}><Plus size={16}/> Add a solution</button>
                 </section>
               </aside>
             </div>
@@ -1005,10 +990,10 @@ function SolutionCard({item,index,onOpen,onEdit,onDelete,canEdit=true,canDelete=
     event.currentTarget.style.setProperty('--tilt-x', '0deg');
     event.currentTarget.style.setProperty('--tilt-y', '0deg');
   }
-  return <article className="solution-card" onPointerMove={handlePointerMove} onPointerLeave={resetPointer} style={{animationDelay:`${index*55}ms`}}><div className="solution-card-top"><div className={`category-icon ${colors[index%colors.length]}`}>{iconMap[item.category]||<FileText size={18}/>}</div><div className="card-actions">{canEdit&&<button className="icon-btn" onClick={onEdit} title="Edit solution" aria-label={`Edit ${item.title}`}><MoreHorizontal size={19}/></button>}{canDelete&&<button className="icon-btn delete-card-btn" onClick={onDelete} title="Delete solution" aria-label={`Delete ${item.title}`}><Trash2 size={17}/></button>}</div></div><div className="solution-category">{item.category||'General'}</div><button className="solution-title" onClick={onOpen}>{item.title}</button><p className="solution-description">{item.problem_description||'No problem description added yet.'}</p>{item.image_url&&<img className="solution-card-image" src={item.image_url} alt={`Reference for ${item.title}`} loading="lazy" />}<div className="solution-card-bottom"><div className="last-fixed"><Clock3 size={14}/><span>Updated {timeAgo(item.updated_at||item.created_at)}</span></div><button className="view-link" onClick={onOpen}>View fix <ArrowUpRight size={15}/></button></div></article>;
+  return <article className="solution-card" onPointerMove={handlePointerMove} onPointerLeave={resetPointer} style={{animationDelay:`${index*55}ms`}}><div className="solution-card-top"><div className={`category-icon ${colors[index%colors.length]}`}>{iconMap[item.category]||<FileText size={18}/>}</div><div className="card-actions">{canEdit&&<button className="icon-btn" onClick={onEdit} title="Edit solution" aria-label={`Edit ${item.title}`}><MoreHorizontal size={19}/></button>}{canDelete&&<button className="icon-btn delete-card-btn" onClick={onDelete} title="Delete solution" aria-label={`Delete ${item.title}`}><Trash2 size={17}/></button>}</div></div><div className="solution-category">{item.category||'General'}</div><button className="solution-title" onClick={onOpen}>{item.title}</button><p className="solution-description">{item.problem_description||'No problem description added yet.'}</p>{item.image_url&&<img className="solution-card-image" src={item.image_url} alt={`Reference for ${item.title}`} loading="lazy" />}<div className="solution-card-bottom"><div className="last-fixed"><Clock3 size={14}/><span>Updated {timeAgo(item.updated_at||item.created_at)}</span></div></div></article>;
 }
 
-function Dashboard({solutions,workspace,session,displayName,query,setQuery,onNew,onCreateWorkspace,onTeam,onBrowse,onOpenSolution,onEditSolution,onDeleteSolution,canCreate=true,canEdit=true,canDelete=true}) {
+function Dashboard({solutions,workspace,session,displayName,query,setQuery,onNew,onCreateWorkspace,onBrowse,onOpenSolution,onEditSolution,onDeleteSolution,canCreate=true,canEdit=true,canDelete=true}) {
   const [teamCount,setTeamCount] = useState(1);
   useEffect(() => {
     let alive = true;
@@ -1083,7 +1068,6 @@ function Dashboard({solutions,workspace,session,displayName,query,setQuery,onNew
   const quickActions = [
     {title:'Add a Solution',description:'Save a new fix or guide',Icon:Lightbulb,onClick:onNew,tone:'blue',disabled:!canCreate},
     {title:'Create Workspace',description:'Organize your solutions',Icon:Folder,onClick:onCreateWorkspace,tone:'blue'},
-    {title:'Invite Team Member',description:'Collaborate with others',Icon:Users,onClick:onTeam,tone:'blue'}
   ];
   return <div className="dashboard-layout">
     <section className="dashboard-main-column" aria-label="Dashboard overview">
@@ -1123,7 +1107,7 @@ function Dashboard({solutions,workspace,session,displayName,query,setQuery,onNew
       <section className="dashboard-recent-section">
         <div className="dashboard-section-heading">
           <div><h2>Recent Solutions</h2><p>{searchTerm ? `Matches for “${query}”` : 'Your team\'s latest problem-solving wins.'}</p></div>
-          <button className="dashboard-view-all" onClick={()=>onBrowse()} type="button">View all <ArrowRight size={15}/></button>
+          
         </div>
         <div className="dashboard-recent-list">
           {recent.length ? recent.map((item,index)=>{
@@ -1131,7 +1115,7 @@ function Dashboard({solutions,workspace,session,displayName,query,setQuery,onNew
             const Icon = categoryIcon(category);
             const tone = categoryTone(category);
             return <article className="dashboard-solution-row" key={item.id}>
-              <button className={`dashboard-row-icon tone-${tone}`} type="button" onClick={()=>onOpenSolution(item)} aria-label={`Open ${item.title}`}><Icon size={22}/></button>
+              <span className={`dashboard-row-icon tone-${tone}`} aria-hidden="true"><Icon size={22}/></span>
               <div className="dashboard-row-content">
                 <button className="dashboard-row-title" type="button" onClick={()=>onOpenSolution(item)}>{item.title}</button>
                 <p>{item.problem_description || 'Open this solution to see the recorded fix and steps.'}</p>
