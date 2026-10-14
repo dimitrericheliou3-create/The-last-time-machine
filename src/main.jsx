@@ -844,7 +844,7 @@ function App() {
         <div className="profile-row profile-row-static">
           <span className="profile-avatar">{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:initials(profile?.display_name||session.user.email||'U')}</span>
           <span className="profile-info"><strong>{profile?.display_name||session.user.email?.split('@')[0]}</strong><span>{activePlanKey==='team'?'Team Plan':activePlanKey==='business'?'Business Plan':'Free Plan'}</span></span>
-          <ChevronRight size={15} className="profile-chevron"/>
+          
         </div>
       </div>
     </aside>
