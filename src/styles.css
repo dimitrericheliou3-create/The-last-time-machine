@@ -464,3 +464,248 @@ button:disabled{filter:saturate(.5)}
 .profile-row-button .profile-avatar{overflow:hidden;flex:0 0 auto}
 .profile-row-button .profile-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .top-avatar-button.active{box-shadow:0 0 0 3px rgba(91,140,255,.35)}
+
+
+/* Lightweight account color schemes — the default dark scheme keeps the original styles */
+.app-shell[data-theme="midnight"]{
+  --theme-bg:#081321;--theme-sidebar:#09111f;--theme-panel:#0d1b2d;--theme-card:#10243a;
+  --theme-header:rgba(8,19,33,.94);--theme-border:#25435f;--theme-text:#e9f7ff;--theme-muted:#88aabd;
+  --theme-accent:#55c7ff;--theme-accent-strong:#228fca;--theme-accent-soft:#15364f;--theme-input:#081827;--theme-success:#72e0bd;
+}
+.app-shell[data-theme="forest"]{
+  --theme-bg:#0a1712;--theme-sidebar:#0b1713;--theme-panel:#11231b;--theme-card:#152a21;
+  --theme-header:rgba(10,23,18,.94);--theme-border:#2b4b3b;--theme-text:#e9f7ee;--theme-muted:#90ae9d;
+  --theme-accent:#69d8a2;--theme-accent-strong:#2c9b6b;--theme-accent-soft:#17392b;--theme-input:#0a1912;--theme-success:#73e6b2;
+}
+.app-shell[data-theme="plum"]{
+  --theme-bg:#110d1b;--theme-sidebar:#130e20;--theme-panel:#20182f;--theme-card:#251c38;
+  --theme-header:rgba(17,13,27,.94);--theme-border:#45345f;--theme-text:#f3edff;--theme-muted:#b0a1c8;
+  --theme-accent:#b6a0ff;--theme-accent-strong:#8166d9;--theme-accent-soft:#322449;--theme-input:#171020;--theme-success:#8fe0c2;
+}
+.app-shell[data-theme="light"]{
+  --theme-bg:#f3f6fc;--theme-sidebar:#ffffff;--theme-panel:#ffffff;--theme-card:#ffffff;
+  --theme-header:rgba(255,255,255,.94);--theme-border:#dbe3f0;--theme-text:#18243a;--theme-muted:#63718a;
+  --theme-accent:#496fe8;--theme-accent-strong:#3158cb;--theme-accent-soft:#e8efff;--theme-input:#f8faff;--theme-success:#187e5b;
+}
+.app-shell[data-theme="midnight"],.app-shell[data-theme="forest"],.app-shell[data-theme="plum"],.app-shell[data-theme="light"]{
+  background:var(--theme-bg);color:var(--theme-text);transition:background-color .22s ease,color .22s ease
+}
+.app-shell[data-theme="midnight"] .sidebar,.app-shell[data-theme="forest"] .sidebar,.app-shell[data-theme="plum"] .sidebar,.app-shell[data-theme="light"] .sidebar{
+  background:var(--theme-sidebar);border-color:var(--theme-border)
+}
+.app-shell[data-theme="midnight"] .topbar,.app-shell[data-theme="forest"] .topbar,.app-shell[data-theme="plum"] .topbar,.app-shell[data-theme="light"] .topbar{
+  background:var(--theme-header);border-color:var(--theme-border)
+}
+.app-shell[data-theme="midnight"] .main-area,.app-shell[data-theme="forest"] .main-area,.app-shell[data-theme="plum"] .main-area,.app-shell[data-theme="light"] .main-area{background:var(--theme-bg)}
+.app-shell[data-theme="midnight"] .workspace-switch,.app-shell[data-theme="forest"] .workspace-switch,.app-shell[data-theme="plum"] .workspace-switch,.app-shell[data-theme="light"] .workspace-switch,
+.app-shell[data-theme="midnight"] .workspace-menu,.app-shell[data-theme="forest"] .workspace-menu,.app-shell[data-theme="plum"] .workspace-menu,.app-shell[data-theme="light"] .workspace-menu,
+.app-shell[data-theme="midnight"] .stat-card,.app-shell[data-theme="forest"] .stat-card,.app-shell[data-theme="plum"] .stat-card,.app-shell[data-theme="light"] .stat-card,
+.app-shell[data-theme="midnight"] .solution-card,.app-shell[data-theme="forest"] .solution-card,.app-shell[data-theme="plum"] .solution-card,.app-shell[data-theme="light"] .solution-card,
+.app-shell[data-theme="midnight"] .team-panel,.app-shell[data-theme="forest"] .team-panel,.app-shell[data-theme="plum"] .team-panel,.app-shell[data-theme="light"] .team-panel,
+.app-shell[data-theme="midnight"] .team-placeholder,.app-shell[data-theme="forest"] .team-placeholder,.app-shell[data-theme="plum"] .team-placeholder,.app-shell[data-theme="light"] .team-placeholder,
+.app-shell[data-theme="midnight"] .profile-editor-panel,.app-shell[data-theme="forest"] .profile-editor-panel,.app-shell[data-theme="plum"] .profile-editor-panel,.app-shell[data-theme="light"] .profile-editor-panel,
+.app-shell[data-theme="midnight"] .profile-preview-panel,.app-shell[data-theme="forest"] .profile-preview-panel,.app-shell[data-theme="plum"] .profile-preview-panel,.app-shell[data-theme="light"] .profile-preview-panel,
+.app-shell[data-theme="midnight"] .profile-preview-card,.app-shell[data-theme="forest"] .profile-preview-card,.app-shell[data-theme="plum"] .profile-preview-card,.app-shell[data-theme="light"] .profile-preview-card,
+.app-shell[data-theme="midnight"] .empty-state,.app-shell[data-theme="forest"] .empty-state,.app-shell[data-theme="plum"] .empty-state,.app-shell[data-theme="light"] .empty-state,
+.app-shell[data-theme="midnight"] .pricing-card,.app-shell[data-theme="forest"] .pricing-card,.app-shell[data-theme="plum"] .pricing-card,.app-shell[data-theme="light"] .pricing-card,
+.app-shell[data-theme="midnight"] .modal,.app-shell[data-theme="forest"] .modal,.app-shell[data-theme="plum"] .modal,.app-shell[data-theme="light"] .modal{
+  background:var(--theme-panel);border-color:var(--theme-border);color:var(--theme-text)
+}
+.app-shell[data-theme="midnight"] .solution-card,.app-shell[data-theme="forest"] .solution-card,.app-shell[data-theme="plum"] .solution-card,.app-shell[data-theme="light"] .solution-card,
+.app-shell[data-theme="midnight"] .stat-card,.app-shell[data-theme="forest"] .stat-card,.app-shell[data-theme="plum"] .stat-card,.app-shell[data-theme="light"] .stat-card{
+  background:linear-gradient(145deg,var(--theme-card),var(--theme-panel))
+}
+.app-shell[data-theme="midnight"] .workspace-switch,.app-shell[data-theme="forest"] .workspace-switch,.app-shell[data-theme="plum"] .workspace-switch,.app-shell[data-theme="light"] .workspace-switch,
+.app-shell[data-theme="midnight"] .workspace-menu,.app-shell[data-theme="forest"] .workspace-menu,.app-shell[data-theme="plum"] .workspace-menu,.app-shell[data-theme="light"] .workspace-menu{
+  background:var(--theme-panel);border-color:var(--theme-border)
+}
+.app-shell[data-theme="midnight"] .workspace-menu-heading,.app-shell[data-theme="forest"] .workspace-menu-heading,.app-shell[data-theme="plum"] .workspace-menu-heading,.app-shell[data-theme="light"] .workspace-menu-heading,
+.app-shell[data-theme="midnight"] .workspace-menu-foot,.app-shell[data-theme="forest"] .workspace-menu-foot,.app-shell[data-theme="plum"] .workspace-menu-foot,.app-shell[data-theme="light"] .workspace-menu-foot{border-color:var(--theme-border)}
+.app-shell[data-theme="midnight"] .workspace-option.active,.app-shell[data-theme="forest"] .workspace-option.active,.app-shell[data-theme="plum"] .workspace-option.active,.app-shell[data-theme="light"] .workspace-option.active,
+.app-shell[data-theme="midnight"] .nav-item.active,.app-shell[data-theme="forest"] .nav-item.active,.app-shell[data-theme="plum"] .nav-item.active,.app-shell[data-theme="light"] .nav-item.active{
+  background:var(--theme-accent-soft);border-color:var(--theme-border);color:var(--theme-text);box-shadow:inset 2px 0 var(--theme-accent)
+}
+.app-shell[data-theme="midnight"] .nav-item:hover,.app-shell[data-theme="forest"] .nav-item:hover,.app-shell[data-theme="plum"] .nav-item:hover,.app-shell[data-theme="light"] .nav-item:hover,
+.app-shell[data-theme="midnight"] .workspace-option:hover:not(:disabled),.app-shell[data-theme="forest"] .workspace-option:hover:not(:disabled),.app-shell[data-theme="plum"] .workspace-option:hover:not(:disabled),.app-shell[data-theme="light"] .workspace-option:hover:not(:disabled){
+  background:var(--theme-accent-soft);color:var(--theme-text)
+}
+.app-shell[data-theme="midnight"] .workspace-avatar,.app-shell[data-theme="forest"] .workspace-avatar,.app-shell[data-theme="plum"] .workspace-avatar,.app-shell[data-theme="light"] .workspace-avatar,
+.app-shell[data-theme="midnight"] .workspace-option-avatar,.app-shell[data-theme="forest"] .workspace-option-avatar,.app-shell[data-theme="plum"] .workspace-option-avatar,.app-shell[data-theme="light"] .workspace-option-avatar{
+  background:var(--theme-accent-soft);border-color:var(--theme-border);color:var(--theme-accent)
+}
+.app-shell[data-theme="midnight"] .brand-mark,.app-shell[data-theme="forest"] .brand-mark,.app-shell[data-theme="plum"] .brand-mark,.app-shell[data-theme="light"] .brand-mark,
+.app-shell[data-theme="midnight"] .welcome-clock,.app-shell[data-theme="forest"] .welcome-clock,.app-shell[data-theme="plum"] .welcome-clock,.app-shell[data-theme="light"] .welcome-clock{
+  background:linear-gradient(145deg,var(--theme-accent),var(--theme-accent-strong));color:var(--theme-button-text,white)
+}
+.app-shell[data-theme="midnight"] .primary-btn,.app-shell[data-theme="forest"] .primary-btn,.app-shell[data-theme="plum"] .primary-btn,.app-shell[data-theme="light"] .primary-btn{
+  background:linear-gradient(135deg,var(--theme-accent),var(--theme-accent-strong));border-color:var(--theme-accent-strong);color:var(--theme-button-text,white);box-shadow:0 5px 16px color-mix(in srgb,var(--theme-accent) 18%,transparent)
+}
+.app-shell[data-theme="midnight"] .primary-btn:hover,.app-shell[data-theme="forest"] .primary-btn:hover,.app-shell[data-theme="plum"] .primary-btn:hover,.app-shell[data-theme="light"] .primary-btn:hover{filter:brightness(1.08)}
+.app-shell[data-theme="midnight"] .secondary-btn,.app-shell[data-theme="forest"] .secondary-btn,.app-shell[data-theme="plum"] .secondary-btn,.app-shell[data-theme="light"] .secondary-btn{
+  background:var(--theme-accent-soft);border-color:var(--theme-border);color:var(--theme-text)
+}
+.app-shell[data-theme="midnight"] .welcome-banner,.app-shell[data-theme="forest"] .welcome-banner,.app-shell[data-theme="plum"] .welcome-banner,.app-shell[data-theme="light"] .welcome-banner{
+  border-color:var(--theme-border);background:radial-gradient(ellipse at 86% 40%,color-mix(in srgb,var(--theme-accent) 22%,transparent) 0,transparent 48%),linear-gradient(115deg,var(--theme-card),var(--theme-panel) 76%)
+}
+.app-shell[data-theme="midnight"] .search-field,.app-shell[data-theme="forest"] .search-field,.app-shell[data-theme="plum"] .search-field,.app-shell[data-theme="light"] .search-field,
+.app-shell[data-theme="midnight"] .select-wrap,.app-shell[data-theme="forest"] .select-wrap,.app-shell[data-theme="plum"] .select-wrap,.app-shell[data-theme="light"] .select-wrap,
+.app-shell[data-theme="midnight"] .profile-form input:not([type=file]),.app-shell[data-theme="forest"] .profile-form input:not([type=file]),.app-shell[data-theme="plum"] .profile-form input:not([type=file]),.app-shell[data-theme="light"] .profile-form input:not([type=file]),
+.app-shell[data-theme="midnight"] .profile-form textarea,.app-shell[data-theme="forest"] .profile-form textarea,.app-shell[data-theme="plum"] .profile-form textarea,.app-shell[data-theme="light"] .profile-form textarea,
+.app-shell[data-theme="midnight"] .solution-form input,.app-shell[data-theme="forest"] .solution-form input,.app-shell[data-theme="plum"] .solution-form input,.app-shell[data-theme="light"] .solution-form input,
+.app-shell[data-theme="midnight"] .solution-form textarea,.app-shell[data-theme="forest"] .solution-form textarea,.app-shell[data-theme="plum"] .solution-form textarea,.app-shell[data-theme="light"] .solution-form textarea{
+  background:var(--theme-input);border-color:var(--theme-border);color:var(--theme-text)
+}
+.app-shell[data-theme="midnight"] .solution-title,.app-shell[data-theme="forest"] .solution-title,.app-shell[data-theme="plum"] .solution-title,.app-shell[data-theme="light"] .solution-title,
+.app-shell[data-theme="midnight"] .page-heading h1,.app-shell[data-theme="forest"] .page-heading h1,.app-shell[data-theme="plum"] .page-heading h1,.app-shell[data-theme="light"] .page-heading h1,
+.app-shell[data-theme="midnight"] h2,.app-shell[data-theme="forest"] h2,.app-shell[data-theme="plum"] h2,.app-shell[data-theme="light"] h2,
+.app-shell[data-theme="midnight"] .workspace-text strong,.app-shell[data-theme="forest"] .workspace-text strong,.app-shell[data-theme="plum"] .workspace-text strong,.app-shell[data-theme="light"] .workspace-text strong,
+.app-shell[data-theme="midnight"] .workspace-menu-heading strong,.app-shell[data-theme="forest"] .workspace-menu-heading strong,.app-shell[data-theme="plum"] .workspace-menu-heading strong,.app-shell[data-theme="light"] .workspace-menu-heading strong,
+.app-shell[data-theme="midnight"] .workspace-option-copy strong,.app-shell[data-theme="forest"] .workspace-option-copy strong,.app-shell[data-theme="plum"] .workspace-option-copy strong,.app-shell[data-theme="light"] .workspace-option-copy strong,
+.app-shell[data-theme="midnight"] .stat-card strong,.app-shell[data-theme="forest"] .stat-card strong,.app-shell[data-theme="plum"] .stat-card strong,.app-shell[data-theme="light"] .stat-card strong,
+.app-shell[data-theme="midnight"] .list-heading h2,.app-shell[data-theme="forest"] .list-heading h2,.app-shell[data-theme="plum"] .list-heading h2,.app-shell[data-theme="light"] .list-heading h2,
+.app-shell[data-theme="midnight"] .profile-preview-copy h2,.app-shell[data-theme="forest"] .profile-preview-copy h2,.app-shell[data-theme="plum"] .profile-preview-copy h2,.app-shell[data-theme="light"] .profile-preview-copy h2{
+  color:var(--theme-text)
+}
+.app-shell[data-theme="midnight"] .page-subtitle,.app-shell[data-theme="forest"] .page-subtitle,.app-shell[data-theme="plum"] .page-subtitle,.app-shell[data-theme="light"] .page-subtitle,
+.app-shell[data-theme="midnight"] .solution-description,.app-shell[data-theme="forest"] .solution-description,.app-shell[data-theme="plum"] .solution-description,.app-shell[data-theme="light"] .solution-description,
+.app-shell[data-theme="midnight"] .stat-card span,.app-shell[data-theme="forest"] .stat-card span,.app-shell[data-theme="plum"] .stat-card span,.app-shell[data-theme="light"] .stat-card span,
+.app-shell[data-theme="midnight"] .list-heading p,.app-shell[data-theme="forest"] .list-heading p,.app-shell[data-theme="plum"] .list-heading p,.app-shell[data-theme="light"] .list-heading p,
+.app-shell[data-theme="midnight"] .last-fixed,.app-shell[data-theme="forest"] .last-fixed,.app-shell[data-theme="plum"] .last-fixed,.app-shell[data-theme="light"] .last-fixed,
+.app-shell[data-theme="midnight"] .results-note,.app-shell[data-theme="forest"] .results-note,.app-shell[data-theme="plum"] .results-note,.app-shell[data-theme="light"] .results-note,
+.app-shell[data-theme="midnight"] .workspace-text span,.app-shell[data-theme="forest"] .workspace-text span,.app-shell[data-theme="plum"] .workspace-text span,.app-shell[data-theme="light"] .workspace-text span,
+.app-shell[data-theme="midnight"] .workspace-menu-foot,.app-shell[data-theme="forest"] .workspace-menu-foot,.app-shell[data-theme="plum"] .workspace-menu-foot,.app-shell[data-theme="light"] .workspace-menu-foot,
+.app-shell[data-theme="midnight"] .team-placeholder>p,.app-shell[data-theme="forest"] .team-placeholder>p,.app-shell[data-theme="plum"] .team-placeholder>p,.app-shell[data-theme="light"] .team-placeholder>p,
+.app-shell[data-theme="midnight"] .profile-editor-heading p,.app-shell[data-theme="forest"] .profile-editor-heading p,.app-shell[data-theme="plum"] .profile-editor-heading p,.app-shell[data-theme="light"] .profile-editor-heading p{
+  color:var(--theme-muted)
+}
+.app-shell[data-theme="midnight"] .solution-card-bottom,.app-shell[data-theme="forest"] .solution-card-bottom,.app-shell[data-theme="plum"] .solution-card-bottom,.app-shell[data-theme="light"] .solution-card-bottom,
+.app-shell[data-theme="midnight"] .footer,.app-shell[data-theme="forest"] .footer,.app-shell[data-theme="plum"] .footer,.app-shell[data-theme="light"] .footer,
+.app-shell[data-theme="midnight"] .profile-account-email,.app-shell[data-theme="forest"] .profile-account-email,.app-shell[data-theme="plum"] .profile-account-email,.app-shell[data-theme="light"] .profile-account-email,
+.app-shell[data-theme="midnight"] .profile-picture-row,.app-shell[data-theme="forest"] .profile-picture-row,.app-shell[data-theme="plum"] .profile-picture-row,.app-shell[data-theme="light"] .profile-picture-row{
+  border-color:var(--theme-border)
+}
+.app-shell[data-theme="midnight"] .nav-item,.app-shell[data-theme="forest"] .nav-item,.app-shell[data-theme="plum"] .nav-item,.app-shell[data-theme="light"] .nav-item{color:var(--theme-muted)}
+.app-shell[data-theme="midnight"] .nav-item svg,.app-shell[data-theme="forest"] .nav-item svg,.app-shell[data-theme="plum"] .nav-item svg,.app-shell[data-theme="light"] .nav-item svg{color:var(--theme-muted)}
+.app-shell[data-theme="midnight"] .solution-category,.app-shell[data-theme="forest"] .solution-category,.app-shell[data-theme="plum"] .solution-category,.app-shell[data-theme="light"] .solution-category,
+.app-shell[data-theme="midnight"] .view-link,.app-shell[data-theme="forest"] .view-link,.app-shell[data-theme="plum"] .view-link,.app-shell[data-theme="light"] .view-link,
+.app-shell[data-theme="midnight"] .banner-kicker,.app-shell[data-theme="forest"] .banner-kicker,.app-shell[data-theme="plum"] .banner-kicker,.app-shell[data-theme="light"] .banner-kicker,
+.app-shell[data-theme="midnight"] .eyebrow,.app-shell[data-theme="forest"] .eyebrow,.app-shell[data-theme="plum"] .eyebrow,.app-shell[data-theme="light"] .eyebrow{color:var(--theme-accent)}
+.app-shell[data-theme="midnight"] .help-card,.app-shell[data-theme="forest"] .help-card,.app-shell[data-theme="plum"] .help-card,.app-shell[data-theme="light"] .help-card{
+  background:radial-gradient(circle at 100% 0,color-mix(in srgb,var(--theme-accent) 16%,transparent) 0,transparent 58%),var(--theme-panel);border-color:var(--theme-border)
+}
+.app-shell[data-theme="midnight"] .member-access-card,.app-shell[data-theme="forest"] .member-access-card,.app-shell[data-theme="plum"] .member-access-card,.app-shell[data-theme="light"] .member-access-card{background:var(--theme-card);border-color:var(--theme-border)}
+.app-shell[data-theme="midnight"] .member-identity strong,.app-shell[data-theme="forest"] .member-identity strong,.app-shell[data-theme="plum"] .member-identity strong,.app-shell[data-theme="light"] .member-identity strong{color:var(--theme-text)}
+.app-shell[data-theme="midnight"] .member-permissions-dropdown,.app-shell[data-theme="forest"] .member-permissions-dropdown,.app-shell[data-theme="plum"] .member-permissions-dropdown,.app-shell[data-theme="light"] .member-permissions-dropdown{background:var(--theme-card);border-color:var(--theme-border)}
+.app-shell[data-theme="midnight"] .member-name-button,.app-shell[data-theme="forest"] .member-name-button,.app-shell[data-theme="plum"] .member-name-button,.app-shell[data-theme="light"] .member-name-button{color:var(--theme-text)}
+.app-shell[data-theme="midnight"] .profile-preview-cover,.app-shell[data-theme="forest"] .profile-preview-cover,.app-shell[data-theme="plum"] .profile-preview-cover,.app-shell[data-theme="light"] .profile-preview-cover{background:radial-gradient(ellipse at 70% 10%,color-mix(in srgb,var(--theme-accent) 55%,transparent) 0,transparent 55%),linear-gradient(125deg,var(--theme-card),var(--theme-panel))}
+.app-shell[data-theme="midnight"] .profile-preview-copy>span,.app-shell[data-theme="forest"] .profile-preview-copy>span,.app-shell[data-theme="plum"] .profile-preview-copy>span,.app-shell[data-theme="light"] .profile-preview-copy>span{color:var(--theme-accent)}
+.app-shell[data-theme="midnight"] .profile-preview-copy p,.app-shell[data-theme="forest"] .profile-preview-copy p,.app-shell[data-theme="plum"] .profile-preview-copy p,.app-shell[data-theme="light"] .profile-preview-copy p{color:var(--theme-muted)}
+.app-shell[data-theme="midnight"] .profile-preview-avatar,.app-shell[data-theme="forest"] .profile-preview-avatar,.app-shell[data-theme="plum"] .profile-preview-avatar,.app-shell[data-theme="light"] .profile-preview-avatar{background:var(--theme-accent-soft);border-color:var(--theme-panel);color:var(--theme-accent)}
+.app-shell[data-theme="midnight"] .detail-category,.app-shell[data-theme="forest"] .detail-category,.app-shell[data-theme="plum"] .detail-category,.app-shell[data-theme="light"] .detail-category{background:var(--theme-accent-soft);border-color:var(--theme-border);color:var(--theme-accent)}
+.app-shell[data-theme="midnight"] .profile-account-note,.app-shell[data-theme="forest"] .profile-account-note,.app-shell[data-theme="plum"] .profile-account-note,.app-shell[data-theme="light"] .profile-account-note{background:var(--theme-accent-soft);border-color:var(--theme-border);color:var(--theme-accent)}
+.app-shell[data-theme="midnight"] .profile-account-note>span,.app-shell[data-theme="forest"] .profile-account-note>span,.app-shell[data-theme="plum"] .profile-account-note>span,.app-shell[data-theme="light"] .profile-account-note>span{color:var(--theme-muted)}
+.app-shell[data-theme="midnight"] .profile-account-note strong,.app-shell[data-theme="forest"] .profile-account-note strong,.app-shell[data-theme="plum"] .profile-account-note strong,.app-shell[data-theme="light"] .profile-account-note strong{color:var(--theme-text)}
+.app-shell[data-theme="midnight"] .profile-account-email strong,.app-shell[data-theme="forest"] .profile-account-email strong,.app-shell[data-theme="plum"] .profile-account-email strong,.app-shell[data-theme="light"] .profile-account-email strong{color:var(--theme-text)}
+.app-shell[data-theme="midnight"] .profile-account-email span,.app-shell[data-theme="forest"] .profile-account-email span,.app-shell[data-theme="plum"] .profile-account-email span,.app-shell[data-theme="light"] .profile-account-email span{color:var(--theme-muted)}
+.app-shell[data-theme="midnight"] .profile-editor-heading h2,.app-shell[data-theme="forest"] .profile-editor-heading h2,.app-shell[data-theme="plum"] .profile-editor-heading h2,.app-shell[data-theme="light"] .profile-editor-heading h2{color:var(--theme-text)}
+.app-shell[data-theme="midnight"] .profile-picture-controls>strong,.app-shell[data-theme="forest"] .profile-picture-controls>strong,.app-shell[data-theme="plum"] .profile-picture-controls>strong,.app-shell[data-theme="light"] .profile-picture-controls>strong{color:var(--theme-text)}
+.app-shell[data-theme="midnight"] .profile-picture-controls p,.app-shell[data-theme="forest"] .profile-picture-controls p,.app-shell[data-theme="plum"] .profile-picture-controls p,.app-shell[data-theme="light"] .profile-picture-controls p{color:var(--theme-muted)}
+.app-shell[data-theme="midnight"] .modal-head,.app-shell[data-theme="forest"] .modal-head,.app-shell[data-theme="plum"] .modal-head,.app-shell[data-theme="light"] .modal-head{border-color:var(--theme-border)}
+.app-shell[data-theme="midnight"] .modal-head h2,.app-shell[data-theme="forest"] .modal-head h2,.app-shell[data-theme="plum"] .modal-head h2,.app-shell[data-theme="light"] .modal-head h2{color:var(--theme-text)}
+.app-shell[data-theme="midnight"] .solution-form label,.app-shell[data-theme="forest"] .solution-form label,.app-shell[data-theme="plum"] .solution-form label,.app-shell[data-theme="light"] .solution-form label{color:var(--theme-text)}
+.app-shell[data-theme="midnight"] .solution-form label em,.app-shell[data-theme="forest"] .solution-form label em,.app-shell[data-theme="plum"] .solution-form label em,.app-shell[data-theme="light"] .solution-form label em{color:var(--theme-muted)}
+
+/* Light preset needs explicit text and control contrasts because the original palette is dark-first */
+.app-shell[data-theme="light"] .brand-name,.app-shell[data-theme="light"] .brand-name span,
+.app-shell[data-theme="light"] .crumb,.app-shell[data-theme="light"] .crumb strong,
+.app-shell[data-theme="light"] .workspace-menu-heading strong,.app-shell[data-theme="light"] .workspace-option-copy strong,
+.app-shell[data-theme="light"] .list-heading h2,.app-shell[data-theme="light"] .page-heading h1,
+.app-shell[data-theme="light"] .solution-title,.app-shell[data-theme="light"] .stat-card strong,
+.app-shell[data-theme="light"] .profile-info strong,.app-shell[data-theme="light"] .member-identity strong,
+.app-shell[data-theme="light"] .pricing-card h2,.app-shell[data-theme="light"] .team-panel h2,
+.app-shell[data-theme="light"] .team-placeholder h2,.app-shell[data-theme="light"] .modal-head h2,
+.app-shell[data-theme="light"] .profile-preview-copy h2{color:var(--theme-text)}
+.app-shell[data-theme="light"] .brand-name small,.app-shell[data-theme="light"] .workspace-menu-heading span,
+.app-shell[data-theme="light"] .workspace-option-copy small,.app-shell[data-theme="light"] .nav-label,
+.app-shell[data-theme="light"] .profile-info span,.app-shell[data-theme="light"] .secure-pill,
+.app-shell[data-theme="light"] .team-placeholder>p,.app-shell[data-theme="light"] .team-panel .panel-copy,
+.app-shell[data-theme="light"] .member-row p,.app-shell[data-theme="light"] .member-access-note,
+.app-shell[data-theme="light"] .profile-account-email small,.app-shell[data-theme="light"] .profile-form small{color:var(--theme-muted)}
+.app-shell[data-theme="light"] .profile-row-button:hover,.app-shell[data-theme="light"] .profile-row-button.active{background:var(--theme-accent-soft);border-color:var(--theme-border)}
+.app-shell[data-theme="light"] .help-card strong,.app-shell[data-theme="light"] .help-card p{color:var(--theme-text)}
+.app-shell[data-theme="light"] .help-card button,.app-shell[data-theme="light"] .view-link,.app-shell[data-theme="light"] .member-profile-handle{color:var(--theme-accent-strong)!important}
+.app-shell[data-theme="light"] .search-field,.app-shell[data-theme="light"] .select-wrap{color:var(--theme-muted)}
+.app-shell[data-theme="light"] .search-field input,.app-shell[data-theme="light"] .select-wrap select{color:var(--theme-text)}
+.app-shell[data-theme="light"] .search-field input::placeholder,.app-shell[data-theme="light"] .profile-form input::placeholder,.app-shell[data-theme="light"] .profile-form textarea::placeholder,.app-shell[data-theme="light"] .solution-form input::placeholder,.app-shell[data-theme="light"] .solution-form textarea::placeholder{color:#8794aa}
+.app-shell[data-theme="light"] .search-field kbd{border-color:var(--theme-border);color:var(--theme-muted)}
+.app-shell[data-theme="light"] .profile-form input:not([type=file]),.app-shell[data-theme="light"] .profile-form textarea,.app-shell[data-theme="light"] .solution-form input,.app-shell[data-theme="light"] .solution-form textarea{color:var(--theme-text)}
+.app-shell[data-theme="light"] .solution-card-bottom{border-color:var(--theme-border)}
+.app-shell[data-theme="light"] .welcome-copy h2{color:var(--theme-text)}
+.app-shell[data-theme="light"] .welcome-copy p,.app-shell[data-theme="light"] .profile-editor-heading p{color:var(--theme-muted)}
+.app-shell[data-theme="light"] .profile-preview-copy p{color:var(--theme-muted)}
+.app-shell[data-theme="light"] .empty-state h3{color:var(--theme-text)}
+.app-shell[data-theme="light"] .empty-state p,.app-shell[data-theme="light"] .footer{color:var(--theme-muted)}
+.app-shell[data-theme="light"] .footer{border-color:var(--theme-border)}
+.app-shell[data-theme="light"] .footer-legal a{color:var(--theme-muted)}
+.app-shell[data-theme="light"] .pricing-card p,.app-shell[data-theme="light"] .pricing-card li{color:var(--theme-muted)}
+.app-shell[data-theme="light"] .theme-preset{color:var(--theme-text)}
+.app-shell[data-theme="light"] .theme-preset-copy small{color:var(--theme-muted)}
+.app-shell[data-theme="light"] .modal-backdrop{background:rgba(25,36,56,.45)}
+.app-shell[data-theme="light"] .profile-picture-preview{background:var(--theme-accent-soft);color:var(--theme-accent)}
+.app-shell[data-theme="light"] .profile-account-note{background:#e8f6f0}
+.app-shell[data-theme="light"] .profile-account-note strong{color:#176044}
+.app-shell[data-theme="light"] .profile-account-note>span{color:#42685b}
+.app-shell[data-theme="light"] .profile-preview-avatar{border-color:var(--theme-panel)}
+.app-shell[data-theme="light"] .profile-username-field{background:var(--theme-input);border-color:var(--theme-border);color:var(--theme-muted)}
+.app-shell[data-theme="light"] .profile-username-field input{color:var(--theme-text)}
+.app-shell[data-theme="light"] .member-permissions-dropdown{background:var(--theme-card);border-color:var(--theme-border)}
+.app-shell[data-theme="light"] .permission-option,.app-shell[data-theme="light"] .permission-panel-heading{color:var(--theme-text)}
+.app-shell[data-theme="light"] .profile-preview-cover{background:radial-gradient(ellipse at 70% 10%,#496fe85c 0,transparent 55%),linear-gradient(125deg,#e5ecfc,#f7f9ff)}
+.app-shell[data-theme="light"] .theme-preview-light .theme-preview-sidebar{background:#e4eafb}
+.app-shell[data-theme="light"] .theme-preview-light .theme-preview-main{background:#fff}
+.app-shell[data-theme="light"] .profile-editor-panel,.app-shell[data-theme="light"] .profile-preview-panel{box-shadow:0 8px 26px rgba(33,55,92,.06)}
+
+/* Settings color-scheme picker */
+.appearance-panel{grid-column:1/-1;width:100%;max-width:none!important;padding:24px!important;border:1px solid #293b56;border-radius:14px;background:linear-gradient(145deg,#111e31,#0f1928);margin:0!important}
+.appearance-panel>.eyebrow{justify-content:flex-start!important;margin-top:0!important}
+.appearance-panel>p{max-width:none!important;margin:9px 0 18px!important}
+.theme-preset-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.theme-preset{position:relative;display:flex;flex-direction:column;gap:10px;min-width:0;padding:10px;border:1px solid #2a3a52;border-radius:12px;background:#0d1726;color:#edf2fc;text-align:left;overflow:hidden}
+.theme-preset:hover:not(:disabled){transform:translateY(-2px);border-color:#5579b5;box-shadow:0 8px 20px #02071330}
+.theme-preset.selected{border-color:#6c97ff;box-shadow:0 0 0 2px #5b8cff22;background:#14233b}
+.theme-preview{height:78px;display:flex;gap:5px;padding:7px;overflow:hidden;border:1px solid #ffffff16;border-radius:8px;background:#0b1220}
+.theme-preview-sidebar{width:25%;border-radius:4px;background:#111d30;border-right:1px solid #ffffff12;flex:0 0 auto}
+.theme-preview-main{display:grid;align-content:start;gap:5px;flex:1;min-width:0;padding:2px}
+.theme-preview-main i{display:block;height:12px;border-radius:3px;background:#15233a}
+.theme-preview-main i:first-child{height:18px;background:#233e6b}
+.theme-preview-main i:nth-child(3){width:65%}
+.theme-preview-dark{background:#0b1220}
+.theme-preview-dark .theme-preview-sidebar{background:#0a111d}
+.theme-preview-dark .theme-preview-main i:first-child{background:#233e6b}
+.theme-preview-midnight{background:#081321}
+.theme-preview-midnight .theme-preview-sidebar{background:#09111f}
+.theme-preview-midnight .theme-preview-main i{background:#10243a}
+.theme-preview-midnight .theme-preview-main i:first-child{background:#164668}
+.theme-preview-forest{background:#0a1712}
+.theme-preview-forest .theme-preview-sidebar{background:#0b1713}
+.theme-preview-forest .theme-preview-main i{background:#152a21}
+.theme-preview-forest .theme-preview-main i:first-child{background:#23583f}
+.theme-preview-plum{background:#110d1b}
+.theme-preview-plum .theme-preview-sidebar{background:#130e20}
+.theme-preview-plum .theme-preview-main i{background:#251c38}
+.theme-preview-plum .theme-preview-main i:first-child{background:#503879}
+.theme-preview-light{background:#f3f6fc;border-color:#dbe3f0}
+.theme-preview-light .theme-preview-sidebar{background:#e4eafb;border-color:#dbe3f0}
+.theme-preview-light .theme-preview-main i{background:#e9eef8}
+.theme-preview-light .theme-preview-main i:first-child{background:#cddaff}
+.theme-preset-copy{display:grid;gap:4px;min-width:0}
+.theme-preset-copy strong{font-size:11px;font-weight:750}
+.theme-preset-copy small{font-size:9px;line-height:1.45;color:#8999b1}
+.theme-swatch-row{display:flex;gap:5px;margin-top:auto}
+.theme-swatch-row i{width:15px;height:15px;border:1px solid #ffffff20;border-radius:50%}
+.theme-preset-check{position:absolute;top:7px;right:7px;width:23px;height:23px;display:grid;place-items:center;border-radius:50%;background:#1f3d6b;color:#c7daff;border:1px solid #8fb2ff66}
+.theme-status{font-size:10px!important;margin:12px 0 0!important;color:#90a6c5!important}
+.theme-status-success{color:#61d5a6!important}
+@media(max-width:1020px){.theme-preset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){.theme-preset-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.theme-preview{height:65px}.appearance-panel{padding:17px!important}}
+@media(prefers-reduced-motion:reduce){.app-shell[data-theme]{transition:none}.theme-preset{transition:none}}
