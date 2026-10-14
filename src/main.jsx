@@ -88,6 +88,27 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Record meaningful foreground activity for the account inactivity policy.
+  // The database RPC rate-limits writes to at most once per hour per account.
+  useEffect(() => {
+    if (!supabase || !session?.user?.id) return;
+    let alive = true;
+    const recordActivity = () => {
+      if (document.visibilityState !== 'visible') return;
+      supabase.rpc('record_user_activity').then(({error}) => {
+        if (alive && error) console.warn('Could not record account activity:', error.message);
+      }).catch(error => {
+        if (alive) console.warn('Could not record account activity:', error?.message || error);
+      });
+    };
+    recordActivity();
+    document.addEventListener('visibilitychange', recordActivity);
+    return () => {
+      alive = false;
+      document.removeEventListener('visibilitychange', recordActivity);
+    };
+  }, [session?.user?.id]);
+
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get('invite');
     if (token) setInviteToken(token);
