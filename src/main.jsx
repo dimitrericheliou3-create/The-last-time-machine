@@ -12,7 +12,7 @@ import './styles.css';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey, { auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true, flowType: 'implicit' } }) : null;
 const TERMS_VERSION = '2026-10-13';
 const PRIVACY_VERSION = '2026-10-13';
 const FREE_SOLUTION_LIMIT = 10;
@@ -496,9 +496,9 @@ function App() {
     try {
       if (authMode === 'signup') {
         if (!legalAccepted) throw new Error('Please accept the Terms of Service and Privacy Policy to create an account.');
-        const {data,error} = await supabase.auth.signUp({email:authEmail.trim(),password:authPassword, options:{data:{legal_terms_version:TERMS_VERSION, legal_privacy_version:PRIVACY_VERSION, legal_accepted_at:new Date().toISOString()}}});
+        const {data,error} = await supabase.auth.signUp({email:authEmail.trim(),password:authPassword, options:{emailRedirectTo:window.location.origin, data:{legal_terms_version:TERMS_VERSION, legal_privacy_version:PRIVACY_VERSION, legal_accepted_at:new Date().toISOString()}}});
         if (error) throw error;
-        if (!data.session) setAuthMessage('Check your email for a confirmation link, then come back and sign in.');
+        if (!data.session) setAuthMessage('Check your email and confirm your address. This page will sign you in and open your workspace automatically.');
         else setAuthMessage('Account created! Setting up your workspace…');
       } else {
         const {error} = await supabase.auth.signInWithPassword({email:authEmail.trim(),password:authPassword});
