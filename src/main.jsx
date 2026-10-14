@@ -109,7 +109,7 @@ function App() {
   const searchInputRef = useRef(null);
   const [category, setCategory] = useState('__all__');
   const [sortOrder, setSortOrder] = useState('recent');
-  const [activeNav, setActiveNav] = useState('Solutions');
+  const [activeNav, setActiveNav] = useState('Dashboard');
   const [modal, setModal] = useState(null);
   const [selected, setSelected] = useState(null);
   const [toast, setToast] = useState('');
