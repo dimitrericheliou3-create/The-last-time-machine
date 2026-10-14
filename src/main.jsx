@@ -66,6 +66,18 @@ function App() {
   const [themeSaving, setThemeSaving] = useState(false);
   const [themeError, setThemeError] = useState('');
   const [themeMessage, setThemeMessage] = useState('');
+
+  useEffect(() => {
+    const themeColors = {
+      dark: '#0b1220',
+      midnight: '#081321',
+      forest: '#0a1712',
+      plum: '#110d1b',
+      light: '#f7f5ef'
+    };
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.setAttribute('content', themeColors[themeKey] || themeColors.dark);
+  }, [themeKey]);
   const workspaceMenuRef = useRef(null);
   const [hasPaidPlan, setHasPaidPlan] = useState(false);
   const [activePlanKey, setActivePlanKey] = useState('starter');
