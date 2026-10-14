@@ -638,7 +638,7 @@ function App() {
   }, [solutions]);
   const categories = categoryOptions;
   const solutionPlanName = activePlanKey === 'team' ? 'Team' : activePlanKey === 'business' ? 'Business' : 'Starter';
-  const solutionUsageCap = activePlanKey === 'team' ? TEAM_SOLUTION_LIMIT : BUSINESS_INCLUDED_SOLUTIONS;
+  const solutionUsageCap = activePlanKey === 'team' ? TEAM_SOLUTION_LIMIT : activePlanKey === 'business' ? BUSINESS_INCLUDED_SOLUTIONS : FREE_SOLUTION_LIMIT;
   const solutionUsagePercent = Math.min(100, Math.round((solutions.length / solutionUsageCap) * 100));
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
