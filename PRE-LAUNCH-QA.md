@@ -76,3 +76,11 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [x] Group main-footer links in a labeled navigation element, separate the tagline, and give the footer a responsive layout.
 - [x] Wrap legal-page links in a labeled navigation element.
 - [ ] Verify the deployed UI visually at desktop, tablet, and narrow mobile widths; test empty workspace, filtered no-results, focus states, and legal links after deployment.
+
+## Signup verification auto-login follow-up
+
+- [x] Signup now requests a redirect to the current app origin after email confirmation.
+- [x] The browser Supabase client explicitly enables URL-session detection and persistent sessions, so a successful confirmation can restore the session and render the signed-in workspace without a second login.
+- [x] Signup instructions now tell the user that confirming the email will open the workspace automatically.
+- [ ] End-to-end test with a new disposable account: submit signup, open the email confirmation link, confirm the browser returns to the deployed app already signed in, and verify the new private workspace loads.
+- [ ] In Supabase Authentication → URL Configuration, verify the deployed app origin is an allowed Redirect URL (and set the correct Site URL). If a custom domain is used, allow-list that domain as well.
