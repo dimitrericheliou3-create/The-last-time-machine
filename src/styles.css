@@ -142,3 +142,199 @@
 .permission-save{justify-self:start;margin-top:2px}
 .member-access-note{margin-top:10px;padding-top:10px;border-top:1px solid rgba(148,163,184,.12);font-size:12px;color:var(--muted,#96a3b8)}
 @media(max-width:620px){.member-access-card{padding:11px}.member-permissions{gap:8px}.permission-save{width:100%;justify-content:center}}
+
+
+/* Motion + interaction pass: lively, tactile, and still restrained */
+:root{
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-smooth:cubic-bezier(.22,1,.36,1);
+  --motion-fast:180ms;
+  --motion-medium:320ms;
+  --motion-slow:620ms;
+  --glow-blue:rgba(91,140,255,.22);
+}
+html{scroll-behavior:smooth}
+body{overflow-x:hidden}
+button,.nav-item,.icon-btn,.solution-title,.view-link,.category-icon,.brand-mark,.profile-avatar,.top-avatar,.workspace-avatar{
+  -webkit-tap-highlight-color:transparent;
+}
+button:not(:disabled){transform-origin:center;transition:transform var(--motion-fast) var(--ease-out),filter var(--motion-fast) ease,box-shadow var(--motion-medium) ease,border-color var(--motion-fast) ease,background-color var(--motion-fast) ease}
+button:not(:disabled):active{transform:translateY(1px) scale(.975);filter:brightness(.96)}
+button:focus-visible{outline:2px solid #90b2ff;outline-offset:3px;box-shadow:0 0 0 5px rgba(91,140,255,.12)}
+button:disabled{filter:saturate(.5)}
+.brand-mark{animation:brandFloat 5s ease-in-out infinite;transition:transform .35s var(--ease-out),box-shadow .35s ease}
+.brand:hover .brand-mark{transform:rotate(-9deg) scale(1.06);box-shadow:0 10px 30px rgba(60,110,245,.36)}
+.eyebrow-dot{animation:dotPulse 3s ease-in-out infinite}
+.sidebar{animation:sidebarArrive .62s var(--ease-out) both}
+.topbar{animation:topbarArrive .55s var(--ease-out) both}
+.page-heading{animation:pageArrive .55s var(--ease-out) both}
+.page-heading .primary-btn{animation:buttonArrive .65s .08s var(--ease-out) both}
+.page-heading h1{animation:headingReveal .7s var(--ease-out) both}
+.page-subtitle{animation:softReveal .6s .08s var(--ease-out) both}
+.solution-limit-note{position:relative;transition:color .25s ease}
+.solution-limit-note:hover{color:#b8ccff}
+.welcome-banner{isolation:isolate;animation:bannerArrive .7s .05s var(--ease-out) both;transition:border-color .35s ease,box-shadow .35s ease}
+.welcome-banner::after{content:"";position:absolute;inset:-40% -30%;z-index:-1;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(140,178,255,.06) 47%,rgba(140,178,255,.16) 50%,rgba(140,178,255,.04) 54%,transparent 65%);transform:translateX(-45%);animation:bannerSweep 9s 1s ease-in-out infinite}
+.welcome-banner:hover{border-color:#46669b;box-shadow:0 18px 50px rgba(1,8,22,.16),0 0 34px rgba(60,112,220,.06)}
+.welcome-clock{animation:clockFloat 4.5s ease-in-out infinite;transition:transform .4s var(--ease-out),box-shadow .4s ease}
+.welcome-banner:hover .welcome-clock{transform:rotate(-8deg) scale(1.07);box-shadow:0 12px 35px rgba(64,117,239,.28)}
+.orbit-one{animation:orbitSpin 16s linear infinite}
+.orbit-two{animation:orbitSpin 22s linear infinite reverse}
+.stat-card{overflow:hidden;transition:transform .28s var(--ease-out),border-color .28s ease,box-shadow .28s ease}
+.stat-card::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.055) 45%,transparent 70%);transform:translateX(-120%);transition:transform .8s var(--ease-out)}
+.stat-card:hover{transform:translateY(-4px);border-color:#3a5278;box-shadow:0 14px 35px rgba(0,0,0,.13)}
+.stat-card:hover::after{transform:translateX(120%)}
+.stat-icon{transition:transform .35s var(--ease-out),filter .35s ease}
+.stat-card:hover .stat-icon{transform:rotate(-7deg) scale(1.08);filter:brightness(1.15)}
+.nav-item{position:relative;overflow:hidden;transition:background .25s ease,color .25s ease,transform .25s var(--ease-out)}
+.nav-item::after{content:"";position:absolute;top:0;bottom:0;left:0;width:2px;background:#8eb0ff;transform:scaleY(0);transform-origin:center;transition:transform .3s var(--ease-out)}
+.nav-item.active::after{transform:scaleY(1)}
+.nav-item svg{transition:transform .25s var(--ease-out),color .2s ease}
+.nav-item:hover svg{transform:translateX(2px) scale(1.06)}
+.nav-count{transition:transform .25s var(--ease-out),background .25s ease}
+.nav-item:hover .nav-count{transform:scale(1.06);background:#365c9d}
+.help-card{transition:transform .3s var(--ease-out),border-color .3s ease,box-shadow .3s ease}
+.help-card:hover{transform:translateY(-3px);border-color:#3c5377;box-shadow:0 12px 28px rgba(0,0,0,.15)}
+.help-icon{transition:transform .35s var(--ease-out)}
+.help-card:hover .help-icon{transform:rotate(-8deg) scale(1.08)}
+.solution-grid{perspective:1100px}
+.solution-card{
+  --pointer-x:50%;
+  --pointer-y:50%;
+  --tilt-x:0deg;
+  --tilt-y:0deg;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  transform-style:preserve-3d;
+  will-change:transform;
+  transition:transform .22s var(--ease-out),border-color .28s ease,box-shadow .3s ease,background .3s ease;
+  animation:rise .55s var(--ease-out) both;
+}
+.solution-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;opacity:0;background:radial-gradient(300px circle at var(--pointer-x) var(--pointer-y),rgba(116,160,255,.15),transparent 72%);transition:opacity .28s ease}
+.solution-card::after{content:"";position:absolute;top:-80%;left:-60%;width:44%;height:260%;pointer-events:none;opacity:0;transform:rotate(24deg) translateX(-80%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.055),transparent);transition:transform .8s var(--ease-out),opacity .25s ease}
+.solution-card:hover{transform:translateY(-5px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));border-color:#4c6a9e;box-shadow:0 18px 45px rgba(0,0,0,.20),0 0 0 1px rgba(99,145,245,.05)}
+.solution-card:hover::before{opacity:1}
+.solution-card:hover::after{opacity:1;transform:rotate(24deg) translateX(380%)}
+.solution-card-top,.solution-category,.solution-title,.solution-description,.solution-card-bottom{position:relative;z-index:1}
+.category-icon{transition:transform .35s var(--ease-out),box-shadow .35s ease,filter .35s ease}
+.solution-card:hover .category-icon{transform:translateY(-2px) rotate(-6deg) scale(1.08);box-shadow:0 8px 18px rgba(0,0,0,.12);filter:brightness(1.08)}
+.card-actions{opacity:.78;transition:opacity .22s ease,transform .25s var(--ease-out)}
+.solution-card:hover .card-actions,.solution-card:focus-within .card-actions{opacity:1;transform:translateY(-1px)}
+.solution-title{transition:color .2s ease,letter-spacing .25s ease}
+.solution-title:hover{letter-spacing:-.05px}
+.solution-description{transition:color .25s ease}
+.solution-card:hover .solution-description{color:#a7b6cd}
+.solution-card-image{transition:transform .45s var(--ease-out),filter .4s ease}
+.solution-card:hover .solution-card-image{transform:scale(1.025);filter:saturate(1.06)}
+.last-fixed svg{transition:transform .25s var(--ease-out)}
+.solution-card:hover .last-fixed svg{transform:rotate(-12deg)}
+.view-link{transition:color .2s ease,gap .2s ease}
+.view-link:hover{gap:10px}
+.view-link svg{transition:transform .2s var(--ease-out)}
+.view-link:hover svg{transform:translate(2px,-2px)}
+.empty-state{animation:softReveal .45s var(--ease-out) both}
+.empty-icon{animation:emptyBob 3.6s ease-in-out infinite}
+.filter-bar{animation:softReveal .5s .06s var(--ease-out) both}
+.search-field{transition:border-color .22s ease,box-shadow .25s ease,background .25s ease,transform .25s var(--ease-out)}
+.search-field:focus-within{background:#121f33;box-shadow:0 0 0 4px rgba(72,120,239,.11),0 8px 24px rgba(0,0,0,.08);transform:translateY(-1px)}
+.search-field>svg{transition:color .22s ease,transform .3s var(--ease-out)}
+.search-field:focus-within>svg{color:#9fbcff;transform:scale(1.08)}
+.select-wrap{transition:border-color .22s ease,background .22s ease,transform .22s var(--ease-out)}
+.select-wrap:hover{transform:translateY(-1px);border-color:#3e5272;background:#142137}
+.primary-btn,.secondary-btn,.danger-btn{position:relative;isolation:isolate;overflow:hidden;transition:transform .18s var(--ease-out),box-shadow .25s ease,filter .2s ease,border-color .22s ease,background .22s ease}
+.primary-btn::after,.secondary-btn::after,.danger-btn::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.14) 50%,transparent 75%);transform:translateX(-130%);transition:transform .65s var(--ease-out)}
+.primary-btn:hover,.secondary-btn:hover,.danger-btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.primary-btn:hover{box-shadow:0 9px 26px rgba(61,111,236,.25)}
+.secondary-btn:hover{border-color:#49648b;box-shadow:0 7px 20px rgba(0,0,0,.12)}
+.danger-btn:hover{box-shadow:0 7px 20px rgba(180,51,82,.12)}
+.primary-btn:hover::after,.secondary-btn:hover::after,.danger-btn:hover::after{transform:translateX(130%)}
+.primary-btn svg,.secondary-btn svg,.danger-btn svg{transition:transform .25s var(--ease-out)}
+.primary-btn:hover svg{transform:translateX(2px)}
+.icon-btn{transition:transform .2s var(--ease-out),background .2s ease,color .2s ease}
+.icon-btn:hover{transform:translateY(-1px) scale(1.05)}
+.icon-btn:active{transform:scale(.92)}
+.solution-form input,.solution-form textarea,.solution-form select,.auth-form input,.checkout-form input{transition:border-color .22s ease,box-shadow .25s ease,background .22s ease}
+.solution-form input:focus,.solution-form textarea:focus,.solution-form select:focus,.auth-form input:focus,.checkout-form input:focus{background:#142137;border-color:#638fff;box-shadow:0 0 0 4px rgba(91,140,255,.1)}
+.permission-option input{transition:filter .2s ease,transform .2s var(--ease-out)}
+.permission-option:hover input{transform:scale(1.1);filter:brightness(1.1)}
+.member-access-card{transition:transform .28s var(--ease-out),border-color .25s ease,background .25s ease,box-shadow .25s ease;animation:softReveal .5s var(--ease-out) both}
+.member-access-card:hover{transform:translateY(-2px);border-color:#385174;background:rgba(69,105,160,.055);box-shadow:0 12px 28px rgba(0,0,0,.08)}
+.member-access-card:nth-child(2){animation-delay:.06s}
+.member-access-card:nth-child(3){animation-delay:.12s}
+.member-access-card:nth-child(4){animation-delay:.18s}
+.member-access-card:nth-child(5){animation-delay:.24s}
+.member-permissions{animation:expandIn .32s var(--ease-out) both}
+.team-panel{animation:panelArrive .5s var(--ease-out) both;transition:border-color .3s ease,box-shadow .3s ease}
+.team-layout>.team-panel:nth-child(2){animation-delay:.08s}
+.pricing-card{transition:transform .35s var(--ease-out),border-color .3s ease,box-shadow .35s ease;animation:panelArrive .55s var(--ease-out) both}
+.pricing-card:nth-child(2){animation-delay:.08s}
+.pricing-card:nth-child(3){animation-delay:.16s}
+.pricing-card:hover{transform:translateY(-6px);border-color:#49689d;box-shadow:0 22px 52px rgba(0,0,0,.2)}
+.pricing-badge{animation:badgePulse 4s ease-in-out infinite}
+.modal-backdrop{animation:backdropIn .22s ease both}
+.modal{transform-origin:50% 55%;animation:modalPop .36s var(--ease-out) both}
+.modal-head .icon-btn:hover{transform:rotate(90deg)}
+.detail-steps li{animation:stepEnter .35s var(--ease-out) both}
+.detail-steps li:nth-child(2){animation-delay:.045s}
+.detail-steps li:nth-child(3){animation-delay:.09s}
+.detail-steps li:nth-child(4){animation-delay:.135s}
+.detail-steps li:nth-child(5){animation-delay:.18s}
+.form-error,.form-success{animation:noticeEnter .3s var(--ease-out) both}
+.toast{animation:toastEnter .35s var(--ease-out) both}
+.toast svg{animation:checkPop .4s .06s var(--ease-out) both}
+.loader{animation:spin .72s linear infinite,loaderGlow 1.8s ease-in-out infinite}
+.auth-card{animation:authArrive .65s var(--ease-out) both}
+.auth-hero h1 span{display:inline-block;animation:accentReveal .8s .1s var(--ease-out) both}
+.auth-card-icon{animation:iconPop .65s .12s var(--ease-out) both}
+.profile-avatar,.top-avatar,.workspace-avatar{transition:transform .28s var(--ease-out),box-shadow .25s ease,background .25s ease}
+.profile-avatar:hover,.top-avatar:hover,.workspace-avatar:hover{transform:scale(1.08) rotate(-5deg);box-shadow:0 6px 17px rgba(67,112,207,.18)}
+.sidebar-bottom .profile-row{animation:softReveal .5s .22s var(--ease-out) both}
+.legal-document{animation:legalArrive .55s var(--ease-out) both}
+.legal-document h2{transition:color .2s ease}
+.legal-document h2:hover{color:#93b2ff}
+.footer a{transition:color .2s ease}
+.footer a:hover{color:#c3d4ff}
+
+@keyframes sidebarArrive{from{opacity:0;translate:-12px 0}to{opacity:1;translate:0 0}}
+@keyframes topbarArrive{from{opacity:0;translate:0 -8px}to{opacity:1;translate:0 0}}
+@keyframes pageArrive{from{opacity:0;translate:0 12px;filter:blur(3px)}to{opacity:1;translate:0 0;filter:blur(0)}}
+@keyframes headingReveal{from{opacity:0;translate:0 9px;letter-spacing:-.8px}to{opacity:1;translate:0 0;letter-spacing:-1.3px}}
+@keyframes softReveal{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
+@keyframes panelArrive{from{opacity:0;translate:0 12px;scale:.99}to{opacity:1;translate:0 0;scale:1}}
+@keyframes buttonArrive{from{opacity:0;scale:.94;translate:0 5px}to{opacity:1;scale:1;translate:0 0}}
+@keyframes bannerArrive{from{opacity:0;translate:0 15px;scale:.99}to{opacity:1;translate:0 0;scale:1}}
+@keyframes bannerSweep{0%,20%{transform:translateX(-55%);opacity:0}36%{opacity:1}65%,100%{transform:translateX(55%);opacity:0}}
+@keyframes brandFloat{0%,100%{translate:0 0}50%{translate:0 -2px}}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 5px rgba(103,146,255,.35)}50%{box-shadow:0 0 13px rgba(103,146,255,.8)}}
+@keyframes clockFloat{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -5px;rotate:2deg}}
+@keyframes orbitSpin{from{rotate:0deg}to{rotate:360deg}}
+@keyframes emptyBob{0%,100%{translate:0 0}50%{translate:0 -5px}}
+@keyframes expandIn{from{opacity:0;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes modalPop{from{opacity:0;translate:0 14px;scale:.97;filter:blur(2px)}to{opacity:1;translate:0 0;scale:1;filter:blur(0)}}
+@keyframes backdropIn{from{opacity:0}to{opacity:1}}
+@keyframes stepEnter{from{opacity:0;translate:-6px 0}to{opacity:1;translate:0 0}}
+@keyframes noticeEnter{from{opacity:0;translate:0 5px}to{opacity:1;translate:0 0}}
+@keyframes toastEnter{from{opacity:0;translate:0 14px;scale:.96}to{opacity:1;translate:0 0;scale:1}}
+@keyframes checkPop{0%{scale:.35;rotate:-25deg;opacity:0}75%{scale:1.13;rotate:5deg;opacity:1}100%{scale:1;rotate:0deg;opacity:1}}
+@keyframes loaderGlow{0%,100%{box-shadow:0 0 0 rgba(111,154,255,0)}50%{box-shadow:0 0 12px rgba(111,154,255,.15)}}
+@keyframes authArrive{from{opacity:0;translate:0 14px;scale:.985}to{opacity:1;translate:0 0;scale:1}}
+@keyframes accentReveal{from{opacity:0;translate:0 12px;filter:blur(4px)}to{opacity:1;translate:0 0;filter:blur(0)}}
+@keyframes iconPop{0%{opacity:0;scale:.72;rotate:-12deg}75%{opacity:1;scale:1.07;rotate:3deg}100%{opacity:1;scale:1;rotate:0deg}}
+@keyframes legalArrive{from{opacity:0;translate:0 10px;filter:blur(2px)}to{opacity:1;translate:0 0;filter:blur(0)}}
+@keyframes badgePulse{0%,100%{box-shadow:0 0 0 rgba(91,140,255,0)}50%{box-shadow:0 0 17px rgba(91,140,255,.17)}}
+
+/* Use the independent translate property for entrance animation so hover tilt remains responsive. */
+@keyframes rise{from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
+
+@media (hover:none){
+  .solution-card:hover{transform:none;box-shadow:none}
+  .solution-card::after{display:none}
+  .card-actions{opacity:1}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .solution-card,.solution-card:hover,.stat-card:hover,.pricing-card:hover,.team-panel,.member-access-card:hover{transform:none!important;translate:none!important;rotate:none!important;scale:none!important}
+  .welcome-banner::after{display:none}
+}
