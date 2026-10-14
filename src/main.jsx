@@ -6,7 +6,7 @@ import {
   ArrowUpRight, ChevronDown, Command, Lightbulb, ShieldCheck, Zap, X, Check,
   CircleHelp, Filter, MoreHorizontal, Pencil, Trash2, Menu, ArrowRight,
   FileText, Activity, LockKeyhole, Mail, Eye, EyeOff, RotateCcw,
-  UserRound, Camera, AtSign, Building2, Save, Image
+  UserRound, Camera, AtSign, Save
 } from 'lucide-react';
 import './styles.css';
 
@@ -1091,7 +1091,7 @@ function ProfilePage({profile,email,loading,loadError,saving,onSave}) {
           <div className="profile-preview-avatar">{visibleAvatar?<img src={visibleAvatar} alt=""/>:<UserRound size={32}/>}</div>
           <div className="profile-preview-copy"><h2>{displayName.trim()||'Your name'}</h2><span>{username.trim()?'@'+username.trim().replace(/^@/,'').toLowerCase():'Add a username'}</span><p>{bio.trim()||'Your bio will appear here.'}</p></div>
         </div>
-        <div className="profile-account-note"><ShieldCheck size={17}/><span><strong>Account-wide profile</strong>Your name and picture follow you between workspaces. Your email remains private to account and workspace functions.</span></div>
+        <div className="profile-account-note"><ShieldCheck size={17}/><span><strong>Account-wide profile</strong>Your name, username, bio, and picture appear to teammates in shared workspaces. Your email is used for sign-in and may be shown to workspace members for identification.</span></div>
         <div className="profile-account-email"><Mail size={16}/><div><span>Account email</span><strong>{email}</strong><small>Email changes are managed through authentication settings.</small></div></div>
       </aside>
     </div>
