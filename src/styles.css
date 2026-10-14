@@ -721,7 +721,7 @@ button:disabled{filter:saturate(.5)}
 .app-shell[data-theme="light"] .top-avatar,
 .app-shell[data-theme="light"] .workspace-create-icon {
   background:#e9ecdf;
-  color:#68765c;
+  color:#59694f;
   border-color:#d9dfcd;
 }
 .app-shell[data-theme="light"] .help-icon,
@@ -730,7 +730,7 @@ button:disabled{filter:saturate(.5)}
 .app-shell[data-theme="light"] .auth-card-icon {
   background:#eff0e7;
   border-color:#dfe2d5;
-  color:#68765c;
+  color:#59694f;
 }
 .app-shell[data-theme="light"] .stat-icon.blue,
 .app-shell[data-theme="light"] .stat-icon.violet,
@@ -740,7 +740,7 @@ button:disabled{filter:saturate(.5)}
 .app-shell[data-theme="light"] .category-icon.green,
 .app-shell[data-theme="light"] .category-icon.amber {
   background:#eff0e7;
-  color:#68765c;
+  color:#59694f;
 }
 .app-shell[data-theme="light"] .stat-spark,
 .app-shell[data-theme="light"] .banner-sparkle {
