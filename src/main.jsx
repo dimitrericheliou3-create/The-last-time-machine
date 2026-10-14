@@ -7,7 +7,7 @@ import {
   CircleHelp, Filter, MoreHorizontal, Pencil, Trash2, Menu, ArrowRight,
   FileText, Activity, LockKeyhole, Mail, Eye, EyeOff, RotateCcw,
   UserRound, Camera, AtSign, Save, Home, Folder, Bell, ChevronRight, Globe,
-  Shield, Wifi, BriefcaseBusiness, Tag, Crown
+  Shield, Wifi, Briefcase, Tag, Crown
 } from 'lucide-react';
 import './styles.css';
 
@@ -1009,7 +1009,7 @@ function Dashboard({solutions,workspace,session,displayName,query,setQuery,onNew
     if(/network|internet|wifi|wi-fi|connection/.test(value)) return Globe;
     if(/account|security|password|access/.test(value)) return Shield;
     if(/software|system|setup|install/.test(value)) return Settings;
-    if(/technology|hardware|camera|device|inventory/.test(value)) return BriefcaseBusiness;
+    if(/technology|hardware|camera|device|inventory/.test(value)) return Briefcase;
     if(/payment|billing/.test(value)) return Activity;
     if(/email|message/.test(value)) return Mail;
     return Lightbulb;
