@@ -50,6 +50,10 @@ function App() {
   const [authMessage, setAuthMessage] = useState('');
   const [authError, setAuthError] = useState('');
   const [workspace, setWorkspace] = useState(null);
+  const [availableWorkspaces, setAvailableWorkspaces] = useState([]);
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const [switchingWorkspace, setSwitchingWorkspace] = useState(false);
+  const workspaceMenuRef = useRef(null);
   const [hasPaidPlan, setHasPaidPlan] = useState(false);
   const [activePlanKey, setActivePlanKey] = useState('starter');
   const [myWorkspacePermissions, setMyWorkspacePermissions] = useState({can_create_solutions:false, can_edit_solutions:false, can_delete_solutions:false});
@@ -114,7 +118,7 @@ function App() {
     if (token) setInviteToken(token);
   }, [session]);
 
-  useEffect(() => { if (session?.user && !inviteToken) loadWorkspace(session.user); else if (!session) { setWorkspace(null); setSolutions(demoSolutions); setMyWorkspacePermissions({can_create_solutions:false, can_edit_solutions:false, can_delete_solutions:false}); } }, [session, inviteToken]);
+  useEffect(() => { if (session?.user && !inviteToken) loadWorkspace(session.user); else if (!session) { setWorkspace(null); setAvailableWorkspaces([]); setWorkspaceMenuOpen(false); setSolutions(demoSolutions); setMyWorkspacePermissions({can_create_solutions:false, can_edit_solutions:false, can_delete_solutions:false}); } }, [session, inviteToken]);
 
   async function acceptWorkspaceInvite() {
     if (!supabase || !session?.user || !inviteToken) return;
@@ -143,54 +147,132 @@ function App() {
 
   const notify = (message) => { setToast(message); window.setTimeout(() => setToast(''), 3000); };
 
-  async function loadWorkspace(user) {
-    if (!supabase) return;
+  useEffect(() => {
+    if (!workspaceMenuOpen) return undefined;
+    const closeOnOutside = (event) => {
+      if (!workspaceMenuRef.current?.contains(event.target)) setWorkspaceMenuOpen(false);
+    };
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setWorkspaceMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOnOutside);
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutside);
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [workspaceMenuOpen]);
+
+  async function loadWorkspace(user, requestedWorkspaceId = null) {
+    if (!supabase || !user?.id) return false;
     setLoadingData(true);
     try {
-      let membershipQuery = supabase
-        .from('workspace_members').select('workspace_id, role, workspaces(id,name,owner_id,created_at)')
-        .eq('user_id', user.id).order('joined_at', {ascending:true});
-      const preferredWorkspaceId = preferredWorkspaceIdRef.current;
-      if (preferredWorkspaceId) membershipQuery = membershipQuery.eq('workspace_id', preferredWorkspaceId);
-      else membershipQuery = membershipQuery.limit(1);
-      let { data: memberships, error: memberError } = await membershipQuery;
+      const { data: memberships, error: memberError } = await supabase
+        .from('workspace_members')
+        .select('workspace_id, role, joined_at, workspaces(id,name,owner_id,created_at)')
+        .eq('user_id', user.id)
+        .order('joined_at', { ascending: true });
       if (memberError) throw memberError;
-      let current = memberships?.[0]?.workspaces;
-      if (preferredWorkspaceId) preferredWorkspaceIdRef.current = null;
-      if (!current) {
-        const {data: created, error:createError} = await supabase.from('workspaces')
-          .insert({name: `${user.email?.split('@')[0] || 'My'} workspace`, owner_id:user.id})
-          .select().single();
-        if (createError) throw createError;
-        // The database trigger creates the owner's membership row. Do not insert it again here.
-        current = created;
+
+      // Keep every workspace the signed-in user belongs to, not just the first one.
+      const workspaceOptions = (memberships || []).map((row) => {
+        const related = Array.isArray(row.workspaces) ? row.workspaces[0] : row.workspaces;
+        return related?.id ? { ...related, membershipRole: row.role || 'member' } : null;
+      }).filter(Boolean);
+
+      const preferredId = requestedWorkspaceId || preferredWorkspaceIdRef.current;
+      if (preferredId && !workspaceOptions.some((item) => item.id === preferredId)) {
+        throw new Error('You no longer have access to that workspace. Ask its owner to invite you again.');
       }
+
+      let current = preferredId
+        ? workspaceOptions.find((item) => item.id === preferredId)
+        : workspaceOptions[0];
+
+      if (!current && preferredId) {
+        throw new Error('That workspace could not be found in your memberships.');
+      }
+
+      if (!current) {
+        const { data: created, error: createError } = await supabase.from('workspaces')
+          .insert({ name: `${user.email?.split('@')[0] || 'My'} workspace`, owner_id: user.id })
+          .select('id,name,owner_id,created_at').single();
+        if (createError) throw createError;
+        // The database trigger creates the owner's membership row. Add the new workspace
+        // to the local list immediately so the picker is correct on the first visit.
+        current = { ...created, membershipRole: 'owner' };
+        workspaceOptions.push(current);
+      }
+
+      if (preferredWorkspaceIdRef.current) preferredWorkspaceIdRef.current = null;
+
+      const isOwner = current.owner_id === user.id;
+      const permissionQuery = isOwner
+        ? Promise.resolve({ data: { can_create_solutions: true, can_edit_solutions: true, can_delete_solutions: true }, error: null })
+        : supabase.from('workspace_member_permissions')
+            .select('can_create_solutions,can_edit_solutions,can_delete_solutions')
+            .eq('workspace_id', current.id).eq('user_id', user.id).maybeSingle();
+
+      const [permissionResult, subscriptionResult, solutionResult] = await Promise.all([
+        permissionQuery,
+        supabase.from('workspace_subscriptions').select('plan_key,status').eq('workspace_id', current.id).maybeSingle(),
+        supabase.from('solutions').select('*').eq('workspace_id', current.id).order('updated_at', { ascending: false })
+      ]);
+      if (permissionResult.error) throw permissionResult.error;
+      if (subscriptionResult.error) throw subscriptionResult.error;
+      if (solutionResult.error) throw solutionResult.error;
+
+      const permissionRow = permissionResult.data;
+      const subscriptionRow = subscriptionResult.data;
+      const activePlan = subscriptionRow?.status === 'active' ? subscriptionRow.plan_key : 'starter';
+      const decoratedSolutions = await attachImageUrls(solutionResult.data || []);
+
+      // Commit the new workspace and all of its related data together, so the UI
+      // cannot accidentally show the previous workspace's solutions under the new name.
+      setAvailableWorkspaces(workspaceOptions);
       setWorkspace(current);
       setWorkspaceName(current.name || '');
-      if (current.owner_id === user.id) {
-        setMyWorkspacePermissions({can_create_solutions:true, can_edit_solutions:true, can_delete_solutions:true});
-      } else {
-        const {data: permissionRow, error: permissionError} = await supabase.from('workspace_member_permissions')
-          .select('can_create_solutions,can_edit_solutions,can_delete_solutions')
-          .eq('workspace_id', current.id).eq('user_id', user.id).maybeSingle();
-        if (permissionError) throw permissionError;
-        setMyWorkspacePermissions({
-          can_create_solutions: !!permissionRow?.can_create_solutions,
-          can_edit_solutions: !!permissionRow?.can_edit_solutions,
-          can_delete_solutions: !!permissionRow?.can_delete_solutions
-        });
-      }
-      const { data: subscriptionRow } = await supabase.from('workspace_subscriptions').select('plan_key,status').eq('workspace_id', current.id).maybeSingle();
-      const activePlan = subscriptionRow?.status === 'active' ? subscriptionRow.plan_key : 'starter';
+      setMyWorkspacePermissions({
+        can_create_solutions: !!permissionRow?.can_create_solutions,
+        can_edit_solutions: !!permissionRow?.can_edit_solutions,
+        can_delete_solutions: !!permissionRow?.can_delete_solutions
+      });
       setActivePlanKey(activePlan);
-      setHasPaidPlan(['team','business'].includes(activePlan));
-      const {data, error} = await supabase.from('solutions').select('*').eq('workspace_id', current.id).order('updated_at',{ascending:false});
-      if (error) throw error;
-      setSolutions(await attachImageUrls(data || []));
+      setHasPaidPlan(['team', 'business'].includes(activePlan));
+      setSolutions(decoratedSolutions);
+      setAuthError('');
+      return true;
     } catch (e) {
       setAuthError(e.message || 'Could not load workspace.');
-      setSolutions([]);
-    } finally { setLoadingData(false); }
+      // If the first load fails, don't leave demo data looking like real workspace data.
+      if (!workspace) setSolutions([]);
+      return false;
+    } finally {
+      setLoadingData(false);
+    }
+  }
+
+  async function switchWorkspace(nextWorkspace) {
+    if (!nextWorkspace?.id || nextWorkspace.id === workspace?.id || switchingWorkspace) {
+      setWorkspaceMenuOpen(false);
+      return;
+    }
+    setWorkspaceMenuOpen(false);
+    setSwitchingWorkspace(true);
+    setSelected(null);
+    setModal(null);
+    const switched = await loadWorkspace(session.user, nextWorkspace.id);
+    setSwitchingWorkspace(false);
+    if (switched) {
+      setActiveNav('Solutions');
+      setQuery('');
+      setCategory('__all__');
+      setSortOrder('recent');
+      setMobileNav(false);
+      notify(`Switched to ${nextWorkspace.name || 'workspace'}`);
+    } else {
+      notify('Could not switch workspaces. Your previous workspace is still selected.');
+    }
   }
 
   async function submitAuth(e) {
@@ -257,6 +339,7 @@ function App() {
       const { data, error } = await supabase.from('workspaces').update({ name: clean }).eq('id', workspace.id).select().single();
       if (error) throw error;
       setWorkspace(data);
+      setAvailableWorkspaces(prev => prev.map(item => item.id === data.id ? { ...item, ...data } : item));
       setSettingsMessage('Workspace name updated.');
       notify('Workspace settings saved');
     } catch (e) { setSettingsError(e.message || 'Could not update workspace.'); }
@@ -454,7 +537,52 @@ function App() {
   return <div className="app-shell">
     <aside className={`sidebar ${mobileNav?'sidebar-open':''}`}>
       <div className="brand"><div className="brand-mark"><RotateCcw size={20}/></div><div className="brand-name">The Last <span>Time Machine</span><small>REAL PROBLEMS. REAL FIXES.</small></div><button className="icon-btn mobile-close" onClick={()=>setMobileNav(false)}><X size={18}/></button></div>
-      <div className="workspace-switch"><div className="workspace-avatar">{(workspace?.name||'W').slice(0,1).toUpperCase()}</div><div className="workspace-text"><strong>{workspace?.name || 'Your workspace'}</strong><span>Workspace</span></div><ChevronDown size={16}/></div>
+      <div className="workspace-picker" ref={workspaceMenuRef}>
+        <button
+          type="button"
+          className={`workspace-switch ${workspaceMenuOpen ? 'is-open' : ''}`}
+          onClick={() => setWorkspaceMenuOpen(open => !open)}
+          aria-label="Choose workspace"
+          aria-haspopup="true"
+          aria-expanded={workspaceMenuOpen}
+          disabled={switchingWorkspace}
+        >
+          <span className="workspace-avatar">{(workspace?.name || 'W').slice(0,1).toUpperCase()}</span>
+          <span className="workspace-text">
+            <strong>{workspace?.name || 'Your workspace'}</strong>
+            <span>{switchingWorkspace ? 'Switching workspace…' : 'Workspace'}</span>
+          </span>
+          <ChevronDown size={16} className="workspace-chevron" />
+        </button>
+        {workspaceMenuOpen && <div className="workspace-menu" role="menu" aria-label="Your workspaces">
+          <div className="workspace-menu-heading">
+            <strong>Your workspaces</strong>
+            <span>{availableWorkspaces.length} {availableWorkspaces.length === 1 ? 'workspace' : 'workspaces'}</span>
+          </div>
+          {availableWorkspaces.map((item) => {
+            const active = item.id === workspace?.id;
+            const roleLabel = item.owner_id === session.user.id ? 'Owner' : 'Member';
+            return <button
+              type="button"
+              role="menuitem"
+              key={item.id}
+              className={`workspace-option ${active ? 'active' : ''}`}
+              aria-current={active ? 'true' : undefined}
+              disabled={switchingWorkspace || active}
+              onClick={() => switchWorkspace(item)}
+            >
+              <span className="workspace-option-avatar">{(item.name || 'W').slice(0,1).toUpperCase()}</span>
+              <span className="workspace-option-copy">
+                <strong>{item.name || 'Untitled workspace'}</strong>
+                <small>{roleLabel}{active ? ' · Current workspace' : ''}</small>
+              </span>
+              {active ? <Check size={16} className="workspace-option-check" /> : <ArrowRight size={15} className="workspace-option-arrow" />}
+            </button>;
+          })}
+          {availableWorkspaces.length === 0 && <p className="workspace-menu-empty">No workspaces found for this account.</p>}
+          <div className="workspace-menu-foot">Each workspace has its own solutions, team access, and plan.</div>
+        </div>}
+      </div>
       <div className="nav-label">WORKSPACE</div>
       <nav className="main-nav">
         {[['Dashboard',LayoutDashboard],['Solutions',BookOpen],['Team',Users],['Plans',Zap]].map(([label,Icon])=><button key={label} className={`nav-item ${activeNav===label?'active':''}`} onClick={()=>{setActiveNav(label);setMobileNav(false);}}><Icon size={18}/><span>{label}</span>{label==='Solutions'&&solutions.length>0&&<span className="nav-count">{solutions.length}</span>}</button>)}
