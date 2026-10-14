@@ -637,6 +637,9 @@ function App() {
     return [...seen.values()].sort((a,b) => a.localeCompare(b));
   }, [solutions]);
   const categories = categoryOptions;
+  const solutionPlanName = activePlanKey === 'team' ? 'Team' : activePlanKey === 'business' ? 'Business' : 'Starter';
+  const solutionUsageCap = activePlanKey === 'team' ? TEAM_SOLUTION_LIMIT : BUSINESS_INCLUDED_SOLUTIONS;
+  const solutionUsagePercent = Math.min(100, Math.round((solutions.length / solutionUsageCap) * 100));
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
     const result = solutions.filter(s => {
@@ -887,6 +890,8 @@ function App() {
           activeNav==='Settings' ? <SettingsPage workspace={workspace} canRenameWorkspace={workspace?.owner_id === session.user.id} workspaceName={workspaceName} setWorkspaceName={setWorkspaceName} onSave={saveWorkspaceName} saving={saving} message={settingsMessage} error={settingsError} onExport={exportSolutions} email={session.user.email} onSignOut={signOut} onDeleteAccount={deleteAccount} deletingAccount={deletingAccount} deleteAccountError={deleteAccountError} themeKey={themeKey} onThemeChange={changeTheme} themeSaving={themeSaving} themeError={themeError} themeMessage={themeMessage} /> :
           <>
             <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR KNOWLEDGE BASE</div><h1>Solutions <span className="heading-count">{solutions.length}</span></h1><p className="page-subtitle">Every problem solved is a lesson worth keeping.</p><div className="solution-limit-note">{activePlanKey === 'team' ? `Team: ${Math.min(solutions.length, TEAM_SOLUTION_LIMIT)} / ${TEAM_SOLUTION_LIMIT} solutions` : activePlanKey === 'business' ? `Business: ${solutions.length.toLocaleString()} / ${BUSINESS_INCLUDED_SOLUTIONS.toLocaleString()} included solutions` : `Free preview: ${Math.min(solutions.length, FREE_SOLUTION_LIMIT)} / ${FREE_SOLUTION_LIMIT} solutions`}</div>{activePlanKey === 'business' && solutions.length > BUSINESS_INCLUDED_SOLUTIONS && <p className="page-subtitle">Estimated overage: {moneyForOverage((solutions.length - BUSINESS_INCLUDED_SOLUTIONS) * BUSINESS_EXTRA_SOLUTION_MONTHLY_PRICE)} / month for {solutions.length - BUSINESS_INCLUDED_SOLUTIONS} extra solution(s). Overage billing is not active in this preview.</p>}</div>{solutions.length>0&&<button className="primary-btn" onClick={()=>{if((activePlanKey==='starter'&&solutions.length>=FREE_SOLUTION_LIMIT)||(activePlanKey==='team'&&solutions.length>=TEAM_SOLUTION_LIMIT)){setActiveNav('Plans');notify(activePlanKey==='team'?`Team plan limit reached: ${TEAM_SOLUTION_LIMIT} solutions per workspace.`:`Free preview limit reached: ${FREE_SOLUTION_LIMIT} solutions per workspace.`);return;}setSelected(null);setSaveError('');setModal({kind:'new'});}}><Plus size={18}/> New solution</button>}</div>
+            <div className="solutions-workspace-layout">
+              <section className="solutions-main-column" aria-label="Solutions library">
             <div className="welcome-banner"><div className="welcome-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="welcome-clock"><RotateCcw size={25}/></div></div><div className="welcome-copy"><span className="banner-kicker">THE POWER OF NOT STARTING OVER</span><h2>You've solved it before.<br/><span>Find the fix in seconds.</span></h2><p>Document the hard-won knowledge your team shouldn't have to rediscover.</p></div></div>
             <div className="stats-row"><Stat icon={BookOpen} label="Saved solutions" value={solutions.length} tint="blue"/><Stat icon={Activity} label="Categories" value={new Set(solutions.map(s=>s.category||'General')).size} tint="violet"/><Stat icon={Clock3} label="Recently updated" value={solutions.filter(s=>Date.now()-new Date(s.updated_at||s.created_at).getTime()<86400000*7).length} tint="green"/></div>
             <div className="list-heading"><div><h2>Your team's fixes</h2><p>Search the knowledge your team has already earned.</p></div><span className="results-note">{filtered.length} {filtered.length===1?'result':'results'}</span></div>
@@ -900,6 +905,55 @@ function App() {
   : <button className="secondary-btn" onClick={()=>{setQuery('');setCategory('__all__');}}>Clear search and filters</button>}</div> :
               <div className="solution-grid">{filtered.map((s,i)=><SolutionCard key={s.id} item={s} index={i} onOpen={()=>{setSelected(s);setModal({kind:'view'});}} onEdit={()=>{setSelected(s);setModal({kind:'edit'});}} onDelete={()=>deleteSolution(s)} canEdit={canEditSolution} canDelete={canDeleteSolution}/>)}</div>}
             {!supabase&&<div className="demo-notice"><CircleHelp size={16}/><div><strong>Preview mode</strong><span>These are sample fixes. Add your Supabase settings to enable real accounts and persistent saving.</span></div></div>}
+              </section>
+              <aside className="solutions-context-rail" aria-label="Solution library tools">
+                <section className="solutions-rail-card solutions-usage-card">
+                  <div className="solutions-rail-title">
+                    <span className="solutions-rail-icon"><Activity size={17}/></span>
+                    <div><h2>Workspace usage</h2><p>Your knowledge at a glance</p></div>
+                  </div>
+                  <div className="solutions-usage-count"><strong>{solutions.length.toLocaleString()}</strong><span>/ {activePlanKey === 'business' ? BUSINESS_INCLUDED_SOLUTIONS.toLocaleString() : activePlanKey === 'team' ? TEAM_SOLUTION_LIMIT.toLocaleString() : FREE_SOLUTION_LIMIT.toLocaleString()}</span></div>
+                  <div className="solutions-usage-track" role="progressbar" aria-label="Saved solutions allowance" aria-valuemin={0} aria-valuemax={100} aria-valuenow={solutionUsagePercent}><span style={{width: solutionUsagePercent + '%'}}/></div>
+                  <p className="solutions-usage-caption">{activePlanKey === 'business' && solutions.length > BUSINESS_INCLUDED_SOLUTIONS ? 'You’re above the included allowance. Overage billing is not active.' : Math.max(0,solutionUsageCap-solutions.length).toLocaleString() + ' included slots remaining on your ' + solutionPlanName + ' plan.'}</p>
+                  <button type="button" className="solutions-rail-link" onClick={()=>setActiveNav('Plans')}>View plans <ChevronRight size={15}/></button>
+                </section>
+
+                <section className="solutions-rail-card">
+                  <div className="solutions-rail-title">
+                    <span className="solutions-rail-icon"><Folder size={17}/></span>
+                    <div><h2>Browse categories</h2><p>Jump straight to a topic</p></div>
+                  </div>
+                  <div className="solutions-rail-categories">
+                    <button type="button" className={'solutions-category-link ' + (category === '__all__' ? 'active' : '')} onClick={()=>{setCategory('__all__');setQuery('');}}>
+                      <span className="solutions-category-dot all-categories-dot"/><span>All solutions</span><strong>{solutions.length}</strong>
+                    </button>
+                    {categories.slice(0,6).map(name=>{
+                      const count=solutions.filter(s=>String(s.category||'General').trim().replace(/\s+/g,' ').toLocaleLowerCase()===String(name).trim().replace(/\s+/g,' ').toLocaleLowerCase()).length;
+                      return <button key={name} type="button" className={'solutions-category-link ' + (String(category).toLocaleLowerCase()===String(name).toLocaleLowerCase()?'active':'')} onClick={()=>{setCategory(name);setQuery('');}}>
+                        <span className="solutions-category-dot"/><span>{name}</span><strong>{count}</strong>
+                      </button>;
+                    })}
+                    {!categories.length&&<p className="solutions-rail-empty">Saved fixes will be grouped here as your library grows.</p>}
+                  </div>
+                  {categories.length>6&&<button type="button" className="solutions-rail-link" onClick={()=>{setCategory('__all__');setQuery('');}}>View all categories <ChevronRight size={15}/></button>}
+                </section>
+
+                <section className="solutions-capture-card">
+                  <span className="solutions-capture-icon"><Lightbulb size={20}/></span>
+                  <h2>Keep the next fix</h2>
+                  <p>Record what went wrong, the steps that worked, and the result—so nobody has to solve it twice.</p>
+                  <button type="button" className="secondary-btn" onClick={()=>{
+                    if(!canCreateSolution){notify('Your workspace owner has not granted permission to create solutions.');return;}
+                    if((activePlanKey==='starter'&&solutions.length>=FREE_SOLUTION_LIMIT)||(activePlanKey==='team'&&solutions.length>=TEAM_SOLUTION_LIMIT)){
+                      setActiveNav('Plans');
+                      notify(activePlanKey==='team'?'Team plan limit reached: '+TEAM_SOLUTION_LIMIT+' solutions per workspace.':'Free preview limit reached: '+FREE_SOLUTION_LIMIT+' solutions per workspace.');
+                      return;
+                    }
+                    setSelected(null);setSaveError('');setModal({kind:'new'});
+                  }}><Plus size={16}/> Add a solution</button>
+                </section>
+              </aside>
+            </div>
           </>}
       </div>
       <footer className="footer"><span className="footer-copy">© {new Date().getFullYear()} The Last Time Machine</span><div className="footer-right"><nav className="footer-legal" aria-label="Legal and policy pages"><a href="/terms" target="_blank" rel="noreferrer">Terms of Service</a><a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a><a href="/acceptable-use" target="_blank" rel="noreferrer">Acceptable Use</a></nav><span className="footer-tagline"><LockKeyhole size={13}/> Your knowledge. Your workspace.</span></div></footer>
@@ -1421,7 +1475,7 @@ function SettingsPage({workspace,canRenameWorkspace,workspaceName,setWorkspaceNa
     {key:'light',name:'Warm Light',description:'Soft cream surfaces with sage accents',swatches:['#f7f5ef','#fffdf8','#59694f']}
   ];
   return <><div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> PREFERENCES</div><h1>Settings</h1><p className="page-subtitle">Manage your workspace, appearance, and account.</p></div></div>
-    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:18,marginTop:24}}>
+    <div className="settings-page-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:18,marginTop:24}}>
       <section className="team-placeholder appearance-panel" style={{textAlign:'left',alignItems:'stretch'}}>
         <div className="eyebrow">APPEARANCE</div><h2 style={{marginTop:10}}>Color scheme</h2><p>Choose the colours you prefer. This setting follows your account across your workspaces and devices.</p>
         <div className="theme-preset-grid" role="group" aria-label="Color scheme presets">
