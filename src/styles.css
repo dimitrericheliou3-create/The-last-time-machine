@@ -470,17 +470,17 @@ button:disabled{filter:saturate(.5)}
 .app-shell[data-theme="midnight"]{
   --theme-bg:#081321;--theme-sidebar:#09111f;--theme-panel:#0d1b2d;--theme-card:#10243a;
   --theme-header:rgba(8,19,33,.94);--theme-border:#25435f;--theme-text:#e9f7ff;--theme-muted:#88aabd;
-  --theme-accent:#55c7ff;--theme-accent-strong:#228fca;--theme-accent-soft:#15364f;--theme-input:#081827;--theme-success:#72e0bd;
+  --theme-accent:#55c7ff;--theme-accent-strong:#228fca;--theme-accent-soft:#15364f;--theme-input:#081827;--theme-success:#72e0bd;--theme-button-text:#061827;
 }
 .app-shell[data-theme="forest"]{
   --theme-bg:#0a1712;--theme-sidebar:#0b1713;--theme-panel:#11231b;--theme-card:#152a21;
   --theme-header:rgba(10,23,18,.94);--theme-border:#2b4b3b;--theme-text:#e9f7ee;--theme-muted:#90ae9d;
-  --theme-accent:#69d8a2;--theme-accent-strong:#2c9b6b;--theme-accent-soft:#17392b;--theme-input:#0a1912;--theme-success:#73e6b2;
+  --theme-accent:#69d8a2;--theme-accent-strong:#2c9b6b;--theme-accent-soft:#17392b;--theme-input:#0a1912;--theme-success:#73e6b2;--theme-button-text:#082116;
 }
 .app-shell[data-theme="plum"]{
   --theme-bg:#110d1b;--theme-sidebar:#130e20;--theme-panel:#20182f;--theme-card:#251c38;
   --theme-header:rgba(17,13,27,.94);--theme-border:#45345f;--theme-text:#f3edff;--theme-muted:#b0a1c8;
-  --theme-accent:#b6a0ff;--theme-accent-strong:#8166d9;--theme-accent-soft:#322449;--theme-input:#171020;--theme-success:#8fe0c2;
+  --theme-accent:#b6a0ff;--theme-accent-strong:#8166d9;--theme-accent-soft:#322449;--theme-input:#171020;--theme-success:#8fe0c2;--theme-button-text:#20102a;
 }
 .app-shell[data-theme="light"]{
   --theme-bg:#f3f6fc;--theme-sidebar:#ffffff;--theme-panel:#ffffff;--theme-card:#ffffff;
