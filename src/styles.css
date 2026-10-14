@@ -3302,7 +3302,7 @@ body,.auth-shell,.loading-screen {
 }
 
 
-/* Clock face stays fixed; the two hands take turns rotating counter-clockwise. */
+/* Fixed clock face; both hands rotate backward together at a 12:1 speed ratio. */
 .brand-mark .brand-clock {
   display: inline-grid;
   place-items: center;
@@ -3316,25 +3316,24 @@ body,.auth-shell,.loading-screen {
 .brand-mark .brand-clock-minute-hand {
   transform-box: view-box;
   transform-origin: 12px 12px;
-  animation-duration: 5s;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
 .brand-mark .brand-clock-minute-hand {
   animation-name: brand-minute-reverse;
+  animation-duration: 4s;
 }
 .brand-mark .brand-clock-hour-hand {
   animation-name: brand-hour-reverse;
+  animation-duration: 48s;
 }
 @keyframes brand-minute-reverse {
-  0% { transform: rotate(0deg); }
-  40% { transform: rotate(-360deg); }
-  40.01%, 100% { transform: rotate(-360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
 }
 @keyframes brand-hour-reverse {
-  0%, 50% { transform: rotate(0deg); }
-  90% { transform: rotate(-360deg); }
-  90.01%, 100% { transform: rotate(-360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
 }
 /* The loading screen used to rotate every SVG inside the logo; keep its face still too. */
 .loading-screen .brand-mark svg {
