@@ -436,3 +436,7 @@ button:disabled{filter:saturate(.5)}
 .workspace-picker .workspace-switch{display:flex}
 @media(max-width:960px){.profile-page-grid{grid-template-columns:1fr}.profile-preview-panel{display:grid;grid-template-columns:minmax(0,1fr);}}
 @media(max-width:600px){.profile-editor-panel,.profile-preview-panel{padding:17px}.profile-picture-row{align-items:flex-start}.profile-picture-preview{width:68px;height:68px}.profile-form-bottom{align-items:flex-start;flex-direction:column}.profile-form-bottom .primary-btn{width:100%}.profile-picture-actions{gap:6px}}
+
+
+.member-profile-handle{color:#8fb2ff!important;font-size:10px!important}
+.member-profile-bio{color:#91a2bb!important;font-size:10px!important;line-height:1.6!important;white-space:pre-wrap;overflow-wrap:anywhere}
