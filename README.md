@@ -29,7 +29,7 @@ A React + Vite web app for recording and searching business troubleshooting know
 3. Copy `.env.example` to `.env`.
 4. In Supabase, open Project Settings → API Keys (or the Connect dialog).
 5. Put the project URL in `VITE_SUPABASE_URL` and the **publishable** key (`sb_publishable_...`) in `VITE_SUPABASE_PUBLISHABLE_KEY`.
-6. In Supabase Authentication settings, configure the Site URL and redirect URLs for the URL you will deploy to.
+6. In Supabase Authentication settings, configure the Site URL and allow-list the deployed app origin under redirect URLs (add any custom domain too). Signup confirmation links return to the current app origin and should open the new account as a signed-in session automatically.
 7. In Authentication → Providers → Email, choose whether to require email confirmation.
 8. Run:
 
