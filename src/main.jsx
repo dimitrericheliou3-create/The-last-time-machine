@@ -508,7 +508,23 @@ function Stat({icon:Icon,label,value,tint}) { return <div className="stat-card">
 function SolutionCard({item,index,onOpen,onEdit,onDelete,canEdit=true,canDelete=true}) {
   const colors=['blue','violet','green','amber'];
   const iconMap={Payments:'↗','Account Access':'◎',Inventory:'▦',Email:'✉'};
-  return <article className="solution-card" style={{animationDelay:`${index*55}ms`}}><div className="solution-card-top"><div className={`category-icon ${colors[index%colors.length]}`}>{iconMap[item.category]||<FileText size={18}/>}</div><div className="card-actions">{canEdit&&<button className="icon-btn" onClick={onEdit} title="Edit solution" aria-label={`Edit ${item.title}`}><MoreHorizontal size={19}/></button>}{canDelete&&<button className="icon-btn delete-card-btn" onClick={onDelete} title="Delete solution" aria-label={`Delete ${item.title}`}><Trash2 size={17}/></button>}</div></div><div className="solution-category">{item.category||'General'}</div><button className="solution-title" onClick={onOpen}>{item.title}</button><p className="solution-description">{item.problem_description||'No problem description added yet.'}</p>{item.image_url&&<img className="solution-card-image" src={item.image_url} alt={`Reference for ${item.title}`} loading="lazy" />}<div className="solution-card-bottom"><div className="last-fixed"><Clock3 size={14}/><span>Updated {timeAgo(item.updated_at||item.created_at)}</span></div><button className="view-link" onClick={onOpen}>View fix <ArrowUpRight size={15}/></button></div></article>;
+  function handlePointerMove(event) {
+    if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+    event.currentTarget.style.setProperty('--pointer-x', `${x * 100}%`);
+    event.currentTarget.style.setProperty('--pointer-y', `${y * 100}%`);
+    event.currentTarget.style.setProperty('--tilt-x', `${(0.5 - y) * 4}deg`);
+    event.currentTarget.style.setProperty('--tilt-y', `${(x - 0.5) * 5}deg`);
+  }
+  function resetPointer(event) {
+    event.currentTarget.style.setProperty('--pointer-x', '50%');
+    event.currentTarget.style.setProperty('--pointer-y', '50%');
+    event.currentTarget.style.setProperty('--tilt-x', '0deg');
+    event.currentTarget.style.setProperty('--tilt-y', '0deg');
+  }
+  return <article className="solution-card" onPointerMove={handlePointerMove} onPointerLeave={resetPointer} style={{animationDelay:`${index*55}ms`}}><div className="solution-card-top"><div className={`category-icon ${colors[index%colors.length]}`}>{iconMap[item.category]||<FileText size={18}/>}</div><div className="card-actions">{canEdit&&<button className="icon-btn" onClick={onEdit} title="Edit solution" aria-label={`Edit ${item.title}`}><MoreHorizontal size={19}/></button>}{canDelete&&<button className="icon-btn delete-card-btn" onClick={onDelete} title="Delete solution" aria-label={`Delete ${item.title}`}><Trash2 size={17}/></button>}</div></div><div className="solution-category">{item.category||'General'}</div><button className="solution-title" onClick={onOpen}>{item.title}</button><p className="solution-description">{item.problem_description||'No problem description added yet.'}</p>{item.image_url&&<img className="solution-card-image" src={item.image_url} alt={`Reference for ${item.title}`} loading="lazy" />}<div className="solution-card-bottom"><div className="last-fixed"><Clock3 size={14}/><span>Updated {timeAgo(item.updated_at||item.created_at)}</span></div><button className="view-link" onClick={onOpen}>View fix <ArrowUpRight size={15}/></button></div></article>;
 }
 
 function Dashboard({solutions,onNew,onBrowse,onOpenSolution,onEditSolution,onDeleteSolution,canCreate=true,canEdit=true,canDelete=true}) {
