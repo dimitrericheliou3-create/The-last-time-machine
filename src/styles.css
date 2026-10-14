@@ -988,3 +988,138 @@ body,.app-shell,.auth-shell,.loading-screen{background:#f5f7fb;color:#202b3c}
 .demo-notice{background:#fff8e9;border-color:#f0dfb8;color:#936b21}
 .demo-notice span{color:#8c774f}
 @media(prefers-color-scheme:dark){:root{color-scheme:light}}
+
+
+/* Dashboard contrast and sidebar alignment polish (light theme) */
+.app-shell[data-theme="light"] .stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e7ef;
+  box-shadow: 0 3px 12px rgba(36, 52, 78, .045);
+}
+.app-shell[data-theme="light"] .stat-card span {
+  color: #5f6d82;
+}
+.app-shell[data-theme="light"] .stat-card strong {
+  color: #202b3c;
+}
+.app-shell[data-theme="light"] .stat-icon.blue {
+  background: #e8efff;
+  color: #355fc8;
+}
+.app-shell[data-theme="light"] .stat-icon.violet {
+  background: #eee9ff;
+  color: #694ac0;
+}
+.app-shell[data-theme="light"] .stat-icon.green {
+  background: #e2f6ed;
+  color: #137653;
+}
+.app-shell[data-theme="light"] .stat-spark {
+  color: #9aa8bd;
+  opacity: .85;
+}
+.app-shell[data-theme="light"] .welcome-banner {
+  background:
+    radial-gradient(ellipse at 85% 0, rgba(101, 133, 205, .17) 0, transparent 43%),
+    linear-gradient(115deg, #ffffff, #f0f4fc 80%);
+  border-color: #dce4f3;
+}
+.app-shell[data-theme="light"] .banner-kicker {
+  color: #4569c5;
+}
+.app-shell[data-theme="light"] .welcome-copy h2 {
+  color: #202b3c;
+}
+.app-shell[data-theme="light"] .welcome-copy h2 span {
+  color: #4168d8;
+}
+.app-shell[data-theme="light"] .welcome-copy p {
+  color: #53627a;
+}
+.app-shell[data-theme="light"] .orbit {
+  border-color: rgba(83, 116, 190, .32);
+}
+.app-shell[data-theme="light"] .orbit-two {
+  border-color: rgba(83, 116, 190, .22);
+}
+.app-shell[data-theme="light"] .banner-sparkle {
+  color: #6684cc;
+}
+.app-shell[data-theme="light"] .sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.app-shell[data-theme="light"] .help-card {
+  background: linear-gradient(145deg, #f4f6fc, #eaf0fb);
+  border-color: #dce4f2;
+  margin-bottom: 2px;
+  color: #263449;
+}
+.app-shell[data-theme="light"] .help-card strong {
+  color: #263449;
+}
+.app-shell[data-theme="light"] .help-card p {
+  color: #596981;
+}
+.app-shell[data-theme="light"] .help-card button {
+  color: #4168c8;
+}
+.app-shell[data-theme="light"] .nav-item.settings,
+.app-shell[data-theme="light"] .sidebar-bottom > .nav-item {
+  margin: 0;
+}
+.app-shell[data-theme="light"] .profile-row {
+  margin-top: 2px;
+  padding: 12px 8px 4px;
+  border-top-color: #e3e8f0;
+  border-radius: 9px;
+}
+.app-shell[data-theme="light"] .profile-row-button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: #263449;
+}
+.app-shell[data-theme="light"] .profile-row-button:hover,
+.app-shell[data-theme="light"] .profile-row-button.active {
+  background: #f0f3f9;
+  color: #263449;
+}
+.app-shell[data-theme="light"] .profile-info strong {
+  color: #263449;
+}
+.app-shell[data-theme="light"] .profile-info span {
+  color: #6d7b90;
+}
+.app-shell[data-theme="light"] .profile-avatar {
+  background: #e1e9fb;
+  color: #3f60b3;
+}
+@media (max-width: 760px) {
+  .app-shell[data-theme="light"] .welcome-banner {
+    padding: 22px;
+  }
+  .app-shell[data-theme="light"] .welcome-art {
+    margin-right: 18px;
+  }
+}
+@media (max-width: 540px) {
+  .app-shell[data-theme="light"] .welcome-art {
+    display: none;
+  }
+  .app-shell[data-theme="light"] .stats-row {
+    gap: 9px;
+  }
+  .app-shell[data-theme="light"] .stat-card {
+    padding: 13px 11px;
+    gap: 8px;
+  }
+  .app-shell[data-theme="light"] .stat-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .app-shell[data-theme="light"] .stat-card strong {
+    font-size: 19px;
+  }
+}
