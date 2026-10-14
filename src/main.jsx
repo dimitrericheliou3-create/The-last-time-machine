@@ -5,7 +5,8 @@ import {
   Search, Plus, Clock3, LayoutDashboard, BookOpen, Users, Settings, LogOut, ImagePlus,
   ArrowUpRight, ChevronDown, Command, Lightbulb, ShieldCheck, Zap, X, Check,
   CircleHelp, Filter, MoreHorizontal, Pencil, Trash2, Menu, ArrowRight,
-  FileText, Activity, LockKeyhole, Mail, Eye, EyeOff, RotateCcw
+  FileText, Activity, LockKeyhole, Mail, Eye, EyeOff, RotateCcw,
+  UserRound, Camera, AtSign, Building2, Save, Image
 } from 'lucide-react';
 import './styles.css';
 
@@ -53,6 +54,14 @@ function App() {
   const [availableWorkspaces, setAvailableWorkspaces] = useState([]);
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [switchingWorkspace, setSwitchingWorkspace] = useState(false);
+  const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
+  const [createWorkspaceName, setCreateWorkspaceName] = useState('');
+  const [createWorkspaceError, setCreateWorkspaceError] = useState('');
+  const [creatingWorkspace, setCreatingWorkspace] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileLoadError, setProfileLoadError] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
   const workspaceMenuRef = useRef(null);
   const [hasPaidPlan, setHasPaidPlan] = useState(false);
   const [activePlanKey, setActivePlanKey] = useState('starter');
@@ -111,6 +120,48 @@ function App() {
       alive = false;
       document.removeEventListener('visibilitychange', recordActivity);
     };
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    let alive = true;
+    async function loadProfile() {
+      if (!supabase || !session?.user?.id) {
+        setProfile(null);
+        setProfileLoadError('');
+        return;
+      }
+      setProfileLoading(true);
+      setProfileLoadError('');
+      try {
+        const { data, error } = await supabase.from('profiles')
+          .select('user_id,display_name,email,username,bio,avatar_path,updated_at')
+          .eq('user_id', session.user.id).single();
+        if (error) throw error;
+        let avatarUrl = null;
+        if (data.avatar_path) {
+          const { data: signed, error: signedError } = await supabase.storage.from('profile-avatars').createSignedUrl(data.avatar_path, 3600);
+          if (!signedError) avatarUrl = signed?.signedUrl || null;
+        }
+        if (alive) setProfile({ ...data, avatarUrl });
+      } catch (e) {
+        if (alive) {
+          setProfileLoadError(e.message || 'Could not load your profile.');
+          setProfile({
+            user_id: session.user.id,
+            display_name: session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Workspace member',
+            email: session.user.email,
+            username: null,
+            bio: null,
+            avatar_path: null,
+            avatarUrl: null
+          });
+        }
+      } finally {
+        if (alive) setProfileLoading(false);
+      }
+    }
+    loadProfile();
+    return () => { alive = false; };
   }, [session?.user?.id]);
 
   useEffect(() => {
@@ -249,6 +300,112 @@ function App() {
       return false;
     } finally {
       setLoadingData(false);
+    }
+  }
+
+  async function createWorkspace() {
+    const name = createWorkspaceName.trim().replace(/\s+/g, ' ');
+    setCreateWorkspaceError('');
+    if (!name || name.length > 120) {
+      setCreateWorkspaceError('Workspace name must be between 1 and 120 characters.');
+      return;
+    }
+    if (!supabase || !session?.user?.id) {
+      setCreateWorkspaceError('Sign in before creating a workspace.');
+      return;
+    }
+    setCreatingWorkspace(true);
+    try {
+      const { data, error } = await supabase.from('workspaces')
+        .insert({ name, owner_id: session.user.id })
+        .select('id,name,owner_id,created_at').single();
+      if (error) throw error;
+
+      // Supabase's workspace trigger creates the owner membership automatically.
+      setCreateWorkspaceOpen(false);
+      setCreateWorkspaceName('');
+      setWorkspaceMenuOpen(false);
+      const loaded = await loadWorkspace(session.user, data.id);
+      if (loaded) {
+        setActiveNav('Solutions');
+        setQuery('');
+        setCategory('__all__');
+        setSortOrder('recent');
+        notify(`Created ${data.name}`);
+      } else {
+        notify(`Created ${data.name}. Refresh if it doesn't appear in the workspace list yet.`);
+      }
+    } catch (e) {
+      setCreateWorkspaceError(e.message || 'Could not create the workspace.');
+    } finally {
+      setCreatingWorkspace(false);
+    }
+  }
+
+  async function saveProfile(payload) {
+    if (!supabase || !session?.user?.id) throw new Error('Sign in before editing your profile.');
+    const displayName = String(payload.displayName || '').trim();
+    const username = String(payload.username || '').trim().replace(/^@/, '').toLowerCase();
+    const bio = String(payload.bio || '').trim();
+    if (!displayName || displayName.length > 80) throw new Error('Display name must be between 1 and 80 characters.');
+    if (username && !/^[a-z0-9._-]{3,24}$/.test(username)) {
+      throw new Error('Username must be 3–24 characters using letters, numbers, dots, underscores, or hyphens.');
+    }
+    if (bio.length > 160) throw new Error('Bio must be 160 characters or fewer.');
+
+    setProfileSaving(true);
+    let uploadedPath = null;
+    const oldPath = profile?.avatar_path || null;
+    try {
+      let avatarPath = payload.removeAvatar ? null : oldPath;
+      if (payload.avatarFile) {
+        const mimeToExtension = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp', 'image/gif':'gif' };
+        const extension = mimeToExtension[payload.avatarFile.type];
+        if (!extension) throw new Error('Use a JPG, PNG, WebP, or GIF profile picture.');
+        if (payload.avatarFile.size > 5 * 1024 * 1024) throw new Error('Profile pictures must be 5 MB or smaller.');
+        uploadedPath = `${session.user.id}/avatar-${crypto.randomUUID()}.${extension}`;
+        const { error: uploadError } = await supabase.storage.from('profile-avatars').upload(uploadedPath, payload.avatarFile, {
+          upsert: false,
+          contentType: payload.avatarFile.type
+        });
+        if (uploadError) throw uploadError;
+        avatarPath = uploadedPath;
+      }
+
+      const { data, error } = await supabase.from('profiles').update({
+        display_name: displayName,
+        username: username || null,
+        bio: bio || null,
+        avatar_path: avatarPath
+      }).eq('user_id', session.user.id)
+        .select('user_id,display_name,email,username,bio,avatar_path,updated_at').single();
+      if (error) {
+        if (error.code === '23505') throw new Error('That username is already taken. Try another one.');
+        if (error.code === '23514') throw new Error('Check the username or bio length and try again.');
+        throw error;
+      }
+
+      let avatarUrl = null;
+      if (data.avatar_path) {
+        const { data: signed, error: signedError } = await supabase.storage.from('profile-avatars').createSignedUrl(data.avatar_path, 3600);
+        if (!signedError) avatarUrl = signed?.signedUrl || null;
+      }
+      const nextProfile = { ...data, avatarUrl };
+      setProfile(nextProfile);
+      if (oldPath && oldPath !== avatarPath) {
+        const { error: removeError } = await supabase.storage.from('profile-avatars').remove([oldPath]);
+        if (removeError) console.warn('Old profile picture could not be removed:', removeError.message);
+      }
+      notify('Profile saved');
+      return nextProfile;
+    } catch (e) {
+      if (uploadedPath) {
+        const { error: cleanupError } = await supabase.storage.from('profile-avatars').remove([uploadedPath]);
+        if (cleanupError) console.warn('New profile picture cleanup failed:', cleanupError.message);
+      }
+      throw e;
+    } finally {
+      setProfileSaving(false);
     }
   }
 
@@ -580,6 +737,15 @@ function App() {
             </button>;
           })}
           {availableWorkspaces.length === 0 && <p className="workspace-menu-empty">No workspaces found for this account.</p>}
+          <button type="button" className="workspace-create-option" onClick={() => {
+            setWorkspaceMenuOpen(false);
+            setCreateWorkspaceError('');
+            setCreateWorkspaceName('');
+            setCreateWorkspaceOpen(true);
+          }}>
+            <span className="workspace-create-icon"><Plus size={16}/></span>
+            <span><strong>Create workspace</strong><small>Start a separate knowledge base</small></span>
+          </button>
           <div className="workspace-menu-foot">Each workspace has its own solutions, team access, and plan.</div>
         </div>}
       </div>
@@ -589,18 +755,24 @@ function App() {
       </nav>
       <div className="sidebar-bottom">
         <div className="help-card"><div className="help-icon"><Lightbulb size={17}/></div><strong>Knowledge that sticks.</strong><p>Capture a fix today. Save your team time tomorrow.</p><button onClick={()=>{setSaveError('');setModal({kind:'new'});}}>Add your first fix <ArrowRight size={14}/></button></div>
+        <button className={`nav-item ${activeNav==='Profile'?'active':''}`} onClick={()=>{setActiveNav('Profile');setMobileNav(false);}}><UserRound size={18}/><span>Profile</span></button>
         <button className={`nav-item ${activeNav==='Settings'?'active':''}`} onClick={()=>{setActiveNav('Settings');setWorkspaceName(workspace?.name||'');setSettingsMessage('');setSettingsError('');setMobileNav(false);}}><Settings size={18}/><span>Settings</span></button>
-        <div className="profile-row"><div className="profile-avatar">{session.user.email?.slice(0,1).toUpperCase()}</div><div className="profile-info"><strong>{session.user.email?.split('@')[0]}</strong><span>{session.user.email}</span></div><button className="icon-btn" title="Sign out" onClick={signOut}><LogOut size={17}/></button></div>
+        <div className="profile-row">
+          <div className="profile-avatar">{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:(profile?.display_name||session.user.email||'U').slice(0,1).toUpperCase()}</div>
+          <div className="profile-info"><strong>{profile?.display_name||session.user.email?.split('@')[0]}</strong><span>{profile?.username?'@'+profile.username:session.user.email}</span></div>
+          <button className="icon-btn" title="Sign out" onClick={signOut}><LogOut size={17}/></button>
+        </div>
       </div>
     </aside>
     {mobileNav&&<div className="scrim" onClick={()=>setMobileNav(false)} />}
     <main className="main-area">
-      <header className="topbar"><button className="icon-btn mobile-menu" onClick={()=>setMobileNav(true)}><Menu size={20}/></button><div className="crumb">Workspace <span>/</span> <strong>{activeNav}</strong></div><div className="top-actions"><div className="secure-pill"><ShieldCheck size={15}/> Private workspace</div><div className="top-avatar">{session.user.email?.slice(0,1).toUpperCase()}</div></div></header>
+      <header className="topbar"><button className="icon-btn mobile-menu" onClick={()=>setMobileNav(true)}><Menu size={20}/></button><div className="crumb">Workspace <span>/</span> <strong>{activeNav}</strong></div><div className="top-actions"><div className="secure-pill"><ShieldCheck size={15}/> Private workspace</div><button type="button" className="top-avatar top-avatar-button" aria-label="Open profile" onClick={()=>setActiveNav('Profile')}>{profile?.avatarUrl?<img src={profile.avatarUrl} alt=""/>:(profile?.display_name||session.user.email||'U').slice(0,1).toUpperCase()}</button></div></header>
       <div className="page-content">
         {authError && <div className="form-error" role="alert" style={{marginBottom:16,display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}><span>{authError}</span><button type="button" className="icon-btn" aria-label="Dismiss error" onClick={()=>setAuthError('')}><X size={16}/></button></div>}
         {activeNav==='Dashboard' ? <Dashboard solutions={solutions} onNew={()=>setModal({kind:'new'})} onBrowse={()=>setActiveNav('Solutions')} onOpenSolution={s=>{setSelected(s);setModal({kind:'view'});}} onEditSolution={s=>{setSelected(s);setModal({kind:'edit'});}} onDeleteSolution={deleteSolution} canCreate={canCreateSolution} canEdit={canEditSolution} canDelete={canDeleteSolution}/> :
           activeNav==='Team' ? <TeamPage workspace={workspace} session={session} notify={notify} /> :
           activeNav==='Plans' ? <PlansPage notify={notify} workspace={workspace} session={session} /> :
+          activeNav==='Profile' ? <ProfilePage profile={profile} email={session.user.email} loading={profileLoading} loadError={profileLoadError} saving={profileSaving} onSave={saveProfile} notify={notify} /> :
           activeNav==='Settings' ? <SettingsPage workspace={workspace} canRenameWorkspace={workspace?.owner_id === session.user.id} workspaceName={workspaceName} setWorkspaceName={setWorkspaceName} onSave={saveWorkspaceName} saving={saving} message={settingsMessage} error={settingsError} onExport={exportSolutions} email={session.user.email} onSignOut={signOut} onDeleteAccount={deleteAccount} deletingAccount={deletingAccount} deleteAccountError={deleteAccountError} /> :
           <>
             <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR KNOWLEDGE BASE</div><h1>Solutions <span className="heading-count">{solutions.length}</span></h1><p className="page-subtitle">Every problem solved is a lesson worth keeping.</p><div className="solution-limit-note">{activePlanKey === 'team' ? `Team: ${Math.min(solutions.length, TEAM_SOLUTION_LIMIT)} / ${TEAM_SOLUTION_LIMIT} solutions` : activePlanKey === 'business' ? `Business: ${solutions.length.toLocaleString()} / ${BUSINESS_INCLUDED_SOLUTIONS.toLocaleString()} included solutions` : `Free preview: ${Math.min(solutions.length, FREE_SOLUTION_LIMIT)} / ${FREE_SOLUTION_LIMIT} solutions`}</div>{activePlanKey === 'business' && solutions.length > BUSINESS_INCLUDED_SOLUTIONS && <p className="page-subtitle">Estimated overage: {moneyForOverage((solutions.length - BUSINESS_INCLUDED_SOLUTIONS) * BUSINESS_EXTRA_SOLUTION_MONTHLY_PRICE)} / month for {solutions.length - BUSINESS_INCLUDED_SOLUTIONS} extra solution(s). Overage billing is not active in this preview.</p>}</div><button className="primary-btn" onClick={()=>{if((activePlanKey==='starter'&&solutions.length>=FREE_SOLUTION_LIMIT)||(activePlanKey==='team'&&solutions.length>=TEAM_SOLUTION_LIMIT)){setActiveNav('Plans');notify(activePlanKey==='team'?`Team plan limit reached: ${TEAM_SOLUTION_LIMIT} solutions per workspace.`:`Free preview limit reached: ${FREE_SOLUTION_LIMIT} solutions per workspace.`);return;}setSelected(null);setSaveError('');setModal({kind:'new'});}}><Plus size={18}/> New solution</button></div>
@@ -616,6 +788,17 @@ function App() {
       </div>
       <footer className="footer"><span>© {new Date().getFullYear()} The Last Time Machine</span><span className="footer-legal"><a href="?legal=terms" target="_blank" rel="noreferrer">Terms</a><a href="?legal=privacy" target="_blank" rel="noreferrer">Privacy</a><a href="?legal=acceptable-use" target="_blank" rel="noreferrer">Acceptable Use</a><LockKeyhole size={13}/> Your knowledge. Your workspace.</span></footer>
     </main>
+    {createWorkspaceOpen&&<div className="modal-backdrop workspace-create-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget&&!creatingWorkspace){setCreateWorkspaceOpen(false);setCreateWorkspaceError('');}}}>
+      <div className="modal workspace-create-modal" role="dialog" aria-modal="true" aria-labelledby="create-workspace-title">
+        <div className="modal-head"><div><span className="modal-kicker">NEW WORKSPACE</span><h2 id="create-workspace-title">Create a separate space</h2></div><button type="button" className="icon-btn" onClick={()=>{if(!creatingWorkspace){setCreateWorkspaceOpen(false);setCreateWorkspaceError('');}}} aria-label="Close create workspace"><X size={19}/></button></div>
+        <form className="solution-form" onSubmit={e=>{e.preventDefault();createWorkspace();}}>
+          <p className="workspace-create-explainer">Each workspace has its own solutions, team members, permissions, and plan. Your account can switch between all workspaces you belong to.</p>
+          <label>Workspace name<input autoFocus value={createWorkspaceName} onChange={e=>setCreateWorkspaceName(e.target.value)} maxLength={120} required placeholder="e.g. Personal projects or Acme Support"/></label>
+          {createWorkspaceError&&<div className="form-error" role="alert">{createWorkspaceError}</div>}
+          <div className="modal-actions"><button type="button" className="secondary-btn" onClick={()=>{setCreateWorkspaceOpen(false);setCreateWorkspaceError('');}} disabled={creatingWorkspace}>Cancel</button><button type="submit" className="primary-btn" disabled={creatingWorkspace}>{creatingWorkspace?<><span className="mini-spinner"/> Creating…</>:<><Plus size={16}/> Create workspace</>}</button></div>
+        </form>
+      </div>
+    </div>}
     {modal&&<Modal kind={modal.kind} item={selected} categories={categoryOptions} onClose={()=>{setModal(null);setSelected(null);setSaveError('');}} onSave={saveSolution} error={saveError} onEdit={()=>{setSaveError('');setModal({kind:'edit'});}} onDelete={deleteSolution} saving={saving} signedIn={!!session} canEdit={canEditSolution} canDelete={canDeleteSolution} />}
     {toast&&<div className="toast"><Check size={17}/>{toast}</div>}
   </div>;
@@ -821,6 +1004,88 @@ function PlansPage({notify}) {
     <div className="pricing-grid">{plans.map((plan,i)=>{const amount=billingCycle==='monthly'?plan.monthly:plan.annual;return <section className={`pricing-card ${i===1?'pricing-featured':''}`} key={plan.key}>{i===1&&<span className="pricing-badge">RECOMMENDED</span>}<h2>{plan.name}</h2><p>{plan.description}</p><div className="pricing-price"><strong>{amount===0?'Free':money(amount)}</strong>{plan.key!=='starter'&&<span> USD / {billingCycle==='monthly'?'month':'year'}</span>}</div><ul>{plan.features.map(f=><li key={f}><Check size={16}/>{f}</li>)}</ul><button className={plan.current?'secondary-btn':'primary-btn'} onClick={()=>openCheckout(plan)}><ArrowRight size={16}/>{plan.current?'Default preview':'Choose '+plan.name}</button></section>;})}</div>
     <p className="billing-disclaimer"><LockKeyhole size={15}/> Payment processing and overage billing are intentionally disabled in this draft. The checkout screen is for design and flow testing only; it cannot charge a card, create a subscription, collect the $0.05 Business overage, or unlock a paid plan.</p>
     {showCheckout&&checkoutPlan&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCheckout(false);}}><div className="modal checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><div className="modal-head"><div><span className="modal-kicker">SECURE CHECKOUT · PREVIEW</span><h2 id="checkout-title">Subscribe to {checkoutPlan.name}</h2></div><button className="icon-btn" onClick={()=>setShowCheckout(false)} aria-label="Close checkout"><X size={19}/></button></div><form className="solution-form checkout-form" onSubmit={submitMockCheckout}><div className="checkout-total"><div><span>Due today</span><strong>{money(billingCycle==='monthly'?checkoutPlan.monthly:checkoutPlan.annual)}</strong></div><span>{billingCycle==='monthly'?'Renews monthly':'Billed annually'}</span></div><label>Email address<input type="email" value={customerEmail} onChange={e=>setCustomerEmail(e.target.value)} placeholder="you@company.com" required/></label><label>Name on card<input value={cardName} onChange={e=>setCardName(e.target.value)} placeholder="Full name" required/></label><div className="mock-card-fields"><div className="mock-card-brand"><span>Card details</span><span>VISA · Mastercard</span></div><div className="mock-card-number"><span>•••• •••• •••• ••••</span><LockKeyhole size={16}/></div><div className="mock-card-bottom"><span>MM / YY</span><span>CVC</span></div><p>Card entry is a visual placeholder in this draft.</p></div><div className="checkout-preview-note"><ShieldCheck size={17}/><span><strong>Preview only</strong>No payment information is collected or sent. No charge will occur.</span></div><button className="primary-btn" type="submit"><LockKeyhole size={16}/> Preview checkout action</button><button className="secondary-btn" type="button" onClick={()=>setShowCheckout(false)}>Cancel</button></form></div></div>}
+  </>;
+}
+
+function ProfilePage({profile,email,loading,loadError,saving,onSave}) {
+  const [displayName,setDisplayName] = useState(profile?.display_name || '');
+  const [username,setUsername] = useState(profile?.username || '');
+  const [bio,setBio] = useState(profile?.bio || '');
+  const [avatarFile,setAvatarFile] = useState(null);
+  const [avatarPreview,setAvatarPreview] = useState(null);
+  const [removeAvatar,setRemoveAvatar] = useState(false);
+  const [error,setError] = useState('');
+  const [message,setMessage] = useState('');
+
+  useEffect(() => {
+    setDisplayName(profile?.display_name || '');
+    setUsername(profile?.username || '');
+    setBio(profile?.bio || '');
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setRemoveAvatar(false);
+  },[profile?.user_id,profile?.display_name,profile?.username,profile?.bio,profile?.avatar_path]);
+
+  useEffect(() => () => {
+    if (avatarPreview?.startsWith('blob:')) URL.revokeObjectURL(avatarPreview);
+  },[avatarPreview]);
+
+  async function submit(e) {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+    try {
+      await onSave({displayName,username,bio,avatarFile,removeAvatar});
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      setRemoveAvatar(false);
+      setMessage('Your profile has been saved.');
+    } catch (e) {
+      setError(e.message || 'Could not save your profile.');
+    }
+  }
+
+  const visibleAvatar = avatarPreview || (!removeAvatar ? profile?.avatarUrl : null);
+  return <>
+    <div className="page-heading">
+      <div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR ACCOUNT</div><h1>Your profile</h1><p className="page-subtitle">Choose how you appear to teammates across your workspaces.</p></div>
+    </div>
+    {loading&&<div className="member-access-note">Loading your saved profile…</div>}
+    {loadError&&<div className="form-error" role="status" style={{marginBottom:16}}>Your saved profile could not be fully loaded: {loadError}</div>}
+    <div className="profile-page-grid">
+      <section className="profile-editor-panel">
+        <div className="profile-editor-heading"><div><div className="eyebrow">PROFILE DETAILS</div><h2>Make it yours</h2><p>Your profile details are attached to your account, not just this workspace.</p></div></div>
+        <form className="profile-form" onSubmit={submit}>
+          <div className="profile-picture-row">
+            <div className="profile-picture-preview">{visibleAvatar?<img src={visibleAvatar} alt="Profile picture preview"/>:<UserRound size={34}/>}</div>
+            <div className="profile-picture-controls">
+              <strong>Profile picture</strong>
+              <p>JPG, PNG, WebP, or GIF · up to 5 MB</p>
+              <div className="profile-picture-actions">
+                <label className="secondary-btn profile-upload-btn"><Camera size={15}/> Choose photo<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>5*1024*1024){setError('Profile pictures must be 5 MB or smaller.');e.target.value='';return;}setAvatarFile(file);setAvatarPreview(URL.createObjectURL(file));setRemoveAvatar(false);setError('');}}/></label>
+                {(profile?.avatar_path||avatarFile)&&<button type="button" className="secondary-btn profile-remove-btn" onClick={()=>{setAvatarFile(null);setAvatarPreview(null);setRemoveAvatar(true);setError('');}}>Remove photo</button>}
+              </div>
+            </div>
+          </div>
+          <label>Display name <span>Shown beside your profile picture</span><input autoComplete="name" maxLength={80} value={displayName} onChange={e=>setDisplayName(e.target.value)} required placeholder="Your name"/></label>
+          <label>Username <span>Optional · unique handle for your account</span><div className="profile-username-field"><AtSign size={16}/><input autoComplete="username" maxLength={24} value={username} onChange={e=>setUsername(e.target.value.replace(/^@/,''))} placeholder="yourname"/></div><small>3–24 characters: letters, numbers, dots, underscores, and hyphens.</small></label>
+          <label>Bio <span>Optional · shown on your profile</span><textarea maxLength={160} rows={3} value={bio} onChange={e=>setBio(e.target.value)} placeholder="A little about you or what you do…"/></label>
+          <div className="profile-form-bottom"><span>{bio.length}/160 characters</span><button className="primary-btn" type="submit" disabled={saving||loading}><Save size={16}/>{saving?'Saving profile…':'Save profile'}</button></div>
+          {error&&<div className="form-error" role="alert">{error}</div>}
+          {message&&<div className="form-success" role="status">{message}</div>}
+        </form>
+      </section>
+      <aside className="profile-preview-panel">
+        <div className="eyebrow">PROFILE PREVIEW</div>
+        <div className="profile-preview-card">
+          <div className="profile-preview-cover"><div className="profile-preview-orbit"/></div>
+          <div className="profile-preview-avatar">{visibleAvatar?<img src={visibleAvatar} alt=""/>:<UserRound size={32}/>}</div>
+          <div className="profile-preview-copy"><h2>{displayName.trim()||'Your name'}</h2><span>{username.trim()?'@'+username.trim().replace(/^@/,'').toLowerCase():'Add a username'}</span><p>{bio.trim()||'Your bio will appear here.'}</p></div>
+        </div>
+        <div className="profile-account-note"><ShieldCheck size={17}/><span><strong>Account-wide profile</strong>Your name and picture follow you between workspaces. Your email remains private to account and workspace functions.</span></div>
+        <div className="profile-account-email"><Mail size={16}/><div><span>Account email</span><strong>{email}</strong><small>Email changes are managed through authentication settings.</small></div></div>
+      </aside>
+    </div>
   </>;
 }
 
