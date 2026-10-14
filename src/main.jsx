@@ -851,7 +851,12 @@ function TeamPage({workspace,session,notify}) {
   const [inviteUrl,setInviteUrl] = useState('');
   const [inviting,setInviting] = useState(false);
   const [savingPermissionsFor,setSavingPermissionsFor] = useState('');
+  const [expandedPermissionsFor,setExpandedPermissionsFor] = useState(null);
   const isOwner = workspace?.owner_id === session?.user?.id;
+
+  useEffect(() => {
+    setExpandedPermissionsFor(null);
+  },[workspace?.id]);
 
   useEffect(() => {
     let alive = true;
@@ -918,6 +923,7 @@ function TeamPage({workspace,session,notify}) {
       }, {onConflict:'workspace_id,user_id'});
       if (error) throw error;
       notify('Member permissions saved.');
+      setExpandedPermissionsFor(null);
     } catch(e) {
       notify(e.message || 'Could not save member permissions.');
     } finally { setSavingPermissionsFor(''); }
@@ -961,21 +967,36 @@ function TeamPage({workspace,session,notify}) {
             <div className="member-row">
               <div className="profile-avatar">{member.profile?.avatarUrl?<img src={member.profile.avatarUrl} alt=""/>:(profileName || profileEmail || 'M').slice(0,1).toUpperCase()}</div>
               <div className="member-identity">
-                <strong>{profileName || 'Workspace member'}{isSelf ? ' (you)' : ''}</strong>
-                {member.profile?.username&&<p className="member-profile-handle">@{member.profile.username}</p>}
+                {mayManage
+                  ? <button
+                      type="button"
+                      className={`member-name-button ${expandedPermissionsFor===member.user_id?'expanded':''}`}
+                      aria-expanded={expandedPermissionsFor===member.user_id}
+                      aria-controls={`member-permissions-${member.user_id}`}
+                      onClick={()=>setExpandedPermissionsFor(current=>current===member.user_id?null:member.user_id)}
+                    >
+                      <span>{profileName || 'Workspace member'}{isSelf ? ' (you)' : ''}</span>
+                      <ChevronDown size={15}/>
+                    </button>
+                  : <strong>{profileName || 'Workspace member'}{isSelf ? ' (you)' : ''}</strong>}
+                {member.profile?.username&&<p className="member-profile-handle">{mayManage
+                  ? <button type="button" className="member-handle-button" onClick={()=>setExpandedPermissionsFor(current=>current===member.user_id?null:member.user_id)} aria-expanded={expandedPermissionsFor===member.user_id}>@{member.profile.username}</button>
+                  : <span>@{member.profile.username}</span>}</p>}
                 {profileEmail&&<p>{profileEmail}</p>}
                 {member.profile?.bio&&<p className="member-profile-bio">{member.profile.bio}</p>}
                 <p>{member.role || 'member'}{member.joined_at ? ' · joined ' + new Date(member.joined_at).toLocaleDateString() : ''}</p>
               </div>
               {member.role==='owner'&&<span className="detail-category">Owner</span>}
             </div>
-            {mayManage ? <div className="member-permissions">
-              <div className="permission-panel-heading"><ShieldCheck size={16}/> Solution permissions</div>
-              <label className="permission-option"><input type="checkbox" checked={!!permissions.can_create_solutions} onChange={e=>changePermission(member.user_id,'can_create_solutions',e.target.checked)}/> Create solutions</label>
-              <label className="permission-option"><input type="checkbox" checked={!!permissions.can_edit_solutions} onChange={e=>changePermission(member.user_id,'can_edit_solutions',e.target.checked)}/> Edit solutions</label>
-              <label className="permission-option"><input type="checkbox" checked={!!permissions.can_delete_solutions} onChange={e=>changePermission(member.user_id,'can_delete_solutions',e.target.checked)}/> Delete solutions</label>
-              <button type="button" className="secondary-btn permission-save" disabled={savingPermissionsFor===member.user_id} onClick={()=>saveMemberPermissions(member)}>{savingPermissionsFor===member.user_id?'Saving…':'Save permissions'}</button>
-            </div> : <div className="member-access-note">{isSelf && isOwner ? 'Owner · full access' : 'Access: ' + (permissions.can_create_solutions || permissions.can_edit_solutions || permissions.can_delete_solutions ? [permissions.can_create_solutions?'create':'',permissions.can_edit_solutions?'edit':'',permissions.can_delete_solutions?'delete':''].filter(Boolean).join(', ') : 'view and search only')}</div>}
+            {mayManage && expandedPermissionsFor===member.user_id ? <div className="member-permissions-dropdown" id={`member-permissions-${member.user_id}`}>
+              <div className="member-permissions">
+                <div className="permission-panel-heading"><ShieldCheck size={16}/> Solution permissions</div>
+                <label className="permission-option"><input type="checkbox" checked={!!permissions.can_create_solutions} onChange={e=>changePermission(member.user_id,'can_create_solutions',e.target.checked)}/> Create solutions</label>
+                <label className="permission-option"><input type="checkbox" checked={!!permissions.can_edit_solutions} onChange={e=>changePermission(member.user_id,'can_edit_solutions',e.target.checked)}/> Edit solutions</label>
+                <label className="permission-option"><input type="checkbox" checked={!!permissions.can_delete_solutions} onChange={e=>changePermission(member.user_id,'can_delete_solutions',e.target.checked)}/> Delete solutions</label>
+                <button type="button" className="secondary-btn permission-save" disabled={savingPermissionsFor===member.user_id} onClick={()=>saveMemberPermissions(member)}>{savingPermissionsFor===member.user_id?'Saving…':'Save permissions'}</button>
+              </div>
+            </div> : !mayManage ? <div className="member-access-note">{isSelf && isOwner ? 'Owner · full access' : 'Access: ' + (permissions.can_create_solutions || permissions.can_edit_solutions || permissions.can_delete_solutions ? [permissions.can_create_solutions?'create':'',permissions.can_edit_solutions?'edit':'',permissions.can_delete_solutions?'delete':''].filter(Boolean).join(', ') : 'view and search only')}</div> : null}
           </div>;
         }) : <div className="member-empty">No membership records found. Refresh or check your workspace permissions.</div>}
         <div className="form-success" style={{marginTop:16}}>Permissions are enforced by Supabase. Hiding a button is not the security boundary.</div>
