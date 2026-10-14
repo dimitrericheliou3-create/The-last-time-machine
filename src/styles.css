@@ -3135,10 +3135,10 @@ body,.auth-shell,.loading-screen {
 }
 .app-shell .solutions-capture-card {
   padding: 20px;
-  border: 1px solid #d5e1ed;
+  border: 1px solid var(--theme-border,#d5e1ed);
   border-radius: 14px;
-  background: linear-gradient(145deg,#f2f6fa,#e8eff6);
-  color: #263f5b;
+  background: linear-gradient(145deg,var(--theme-accent-soft,#f2f6fa),color-mix(in srgb,var(--theme-panel,#fff) 65%,var(--theme-accent-soft,#e8eff6)));
+  color: var(--theme-text,#263f5b);
   box-shadow: 0 3px 12px rgba(31,48,70,.035);
 }
 .app-shell .solutions-capture-icon {
@@ -3148,30 +3148,30 @@ body,.auth-shell,.loading-screen {
   place-items: center;
   margin-bottom: 13px;
   border-radius: 11px;
-  background: #dfeaf4;
-  color: #56789b;
+  background: var(--theme-accent-soft,#dfeaf4);
+  color: var(--theme-accent,#56789b);
 }
 .app-shell .solutions-capture-card h2 {
   margin: 0 0 7px;
-  color: #243c58;
+  color: var(--theme-text,#243c58);
   font: 750 14px/1.3 Inter,sans-serif;
 }
 .app-shell .solutions-capture-card p {
   margin: 0 0 15px;
-  color: #647a94;
+  color: var(--theme-muted,#647a94);
   font-size: 10.5px;
   line-height: 1.65;
 }
 .app-shell .solutions-capture-card .secondary-btn {
   width: 100%;
   justify-content: center;
-  background: #ffffff;
-  border-color: #d0dce8;
-  color: #476789;
+  background: var(--theme-panel,#ffffff);
+  border-color: var(--theme-border,#d0dce8);
+  color: var(--theme-accent-strong,#476789);
 }
 .app-shell .solutions-capture-card .secondary-btn:hover {
-  background: #f9fbfd;
-  border-color: #aebfd1;
+  background: var(--theme-card,#f9fbfd);
+  border-color: var(--theme-accent,#aebfd1);
 }
 .app-shell .team-layout {
   grid-template-columns: minmax(0,1.3fr) minmax(290px,.8fr);
