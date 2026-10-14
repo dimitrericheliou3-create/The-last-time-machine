@@ -1355,10 +1355,6 @@ function TeamPage({workspace,session,notify}) {
 
 function PlansPage({notify}) {
   const [billingCycle,setBillingCycle] = useState('monthly');
-  const [checkoutPlan,setCheckoutPlan] = useState(null);
-  const [customerEmail,setCustomerEmail] = useState('');
-  const [cardName,setCardName] = useState('');
-  const [showCheckout,setShowCheckout] = useState(false);
   const plans = [
     {key:'starter',name:'Starter',monthly:0,annual:0,description:'Free preview with a small knowledge-base allowance',features:['Multiple workspaces during preview','Up to 10 saved solutions per workspace','Search and organise solutions','CSV export'],current:true},
     {key:'team',name:'Team',monthly:20,annual:200,description:'For teams that need a reliable shared knowledge base',features:['Up to 500 saved solutions per workspace','Team invitations and access permissions','Searchable solutions and reference images','CSV export and workspace settings'],current:false},
@@ -1366,18 +1362,13 @@ function PlansPage({notify}) {
   ];
   const money = (amount) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
   function openCheckout(plan) {
-    if (plan.current) { notify('Starter is the default preview only; live subscription status is not connected.'); return; }
-    setCheckoutPlan(plan); setCustomerEmail(''); setCardName(''); setShowCheckout(true);
-  }
-  function submitMockCheckout(e) {
-    e.preventDefault();
-    notify('Checkout is a visual draft only — no payment was taken and no plan was changed.');
+    if (plan.current) { notify('Starter is the default free preview.'); return; }
+    notify(`${plan.name} is coming soon. Paid subscriptions are not available yet.`);
   }
   return <>
     <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> SIMPLE PRICING</div><h1>Plans for your knowledge base</h1><p className="page-subtitle">Choose a plan for the way your team captures and reuses fixes.</p></div><div className="billing-toggle"><button className={billingCycle==='monthly'?'active':''} onClick={()=>setBillingCycle('monthly')}>Monthly</button><button className={billingCycle==='annual'?'active':''} onClick={()=>setBillingCycle('annual')}>Annual <span>Save 2 months</span></button></div></div>
-    <div className="pricing-grid">{plans.map((plan,i)=>{const amount=billingCycle==='monthly'?plan.monthly:plan.annual;return <section className={`pricing-card ${i===1?'pricing-featured':''}`} key={plan.key}>{i===1&&<span className="pricing-badge">RECOMMENDED</span>}<h2>{plan.name}</h2><p>{plan.description}</p><div className="pricing-price"><strong>{amount===0?'Free':money(amount)}</strong>{plan.key!=='starter'&&<span> USD / {billingCycle==='monthly'?'month':'year'}</span>}</div><ul>{plan.features.map(f=><li key={f}><Check size={16}/>{f}</li>)}</ul><button className={plan.current?'secondary-btn':'primary-btn'} onClick={()=>openCheckout(plan)}><ArrowRight size={16}/>{plan.current?'Default preview':'Choose '+plan.name}</button></section>;})}</div>
-    <p className="billing-disclaimer"><LockKeyhole size={15}/> Payment processing and overage billing are intentionally disabled in this draft. The checkout screen is for design and flow testing only; it cannot charge a card, create a subscription, collect the $0.05 Business overage, or unlock a paid plan.</p>
-    {showCheckout&&checkoutPlan&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setShowCheckout(false);}}><div className="modal checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><div className="modal-head"><div><span className="modal-kicker">SECURE CHECKOUT · PREVIEW</span><h2 id="checkout-title">Subscribe to {checkoutPlan.name}</h2></div><button className="icon-btn" onClick={()=>setShowCheckout(false)} aria-label="Close checkout"><X size={19}/></button></div><form className="solution-form checkout-form" onSubmit={submitMockCheckout}><div className="checkout-total"><div><span>Due today</span><strong>{money(billingCycle==='monthly'?checkoutPlan.monthly:checkoutPlan.annual)}</strong></div><span>{billingCycle==='monthly'?'Renews monthly':'Billed annually'}</span></div><label>Email address<input type="email" value={customerEmail} onChange={e=>setCustomerEmail(e.target.value)} placeholder="you@company.com" required/></label><label>Name on card<input value={cardName} onChange={e=>setCardName(e.target.value)} placeholder="Full name" required/></label><div className="mock-card-fields"><div className="mock-card-brand"><span>Card details</span><span>VISA · Mastercard</span></div><div className="mock-card-number"><span>•••• •••• •••• ••••</span><LockKeyhole size={16}/></div><div className="mock-card-bottom"><span>MM / YY</span><span>CVC</span></div><p>Card entry is a visual placeholder in this draft.</p></div><div className="checkout-preview-note"><ShieldCheck size={17}/><span><strong>Preview only</strong>No payment information is collected or sent. No charge will occur.</span></div><button className="primary-btn" type="submit"><LockKeyhole size={16}/> Preview checkout action</button><button className="secondary-btn" type="button" onClick={()=>setShowCheckout(false)}>Cancel</button></form></div></div>}
+    <div className="pricing-grid">{plans.map((plan,i)=>{const amount=billingCycle==='monthly'?plan.monthly:plan.annual;return <section className={`pricing-card ${i===1?'pricing-featured':''}`} key={plan.key}>{i===1&&<span className="pricing-badge">RECOMMENDED</span>}<h2>{plan.name}</h2><p>{plan.description}</p><div className="pricing-price"><strong>{amount===0?'Free':money(amount)}</strong>{plan.key!=='starter'&&<span> USD / {billingCycle==='monthly'?'month':'year'}</span>}</div><ul>{plan.features.map(f=><li key={f}><Check size={16}/>{f}</li>)}</ul><button className={plan.current?'secondary-btn':'primary-btn'} aria-label={plan.current?'Starter free preview':`${plan.name} plan coming soon`} onClick={()=>openCheckout(plan)}><ArrowRight size={16}/>{plan.current?'Default preview':'Coming soon'}</button></section>;})}</div>
+    <p className="billing-disclaimer"><LockKeyhole size={15}/> Paid plans are coming soon. You can continue using the free Starter preview. No payment will be taken until subscriptions are available.</p>
   </>;
 }
 
