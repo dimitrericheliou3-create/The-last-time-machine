@@ -1123,3 +1123,118 @@ body,.app-shell,.auth-shell,.loading-screen{background:#f5f7fb;color:#202b3c}
     font-size: 19px;
   }
 }
+
+
+/* Warm neutral accent pass: replace remaining blue accents in the light dashboard */
+.app-shell[data-theme="light"] {
+  --blue: #78866d;
+  --blue2: #626f58;
+}
+.app-shell[data-theme="light"] button:focus-visible,
+.app-shell[data-theme="light"] input:focus-visible,
+.app-shell[data-theme="light"] textarea:focus-visible,
+.app-shell[data-theme="light"] select:focus-visible {
+  outline-color: #879579;
+}
+.app-shell[data-theme="light"] .brand-mark {
+  background: linear-gradient(145deg, #a5ad90, #78866d);
+  box-shadow: 0 7px 22px rgba(102,119,86,.14);
+}
+.app-shell[data-theme="light"] .brand-name span,
+.app-shell[data-theme="light"] .eyebrow,
+.app-shell[data-theme="light"] .view-link,
+.app-shell[data-theme="light"] .footer-legal a:hover,
+.app-shell[data-theme="light"] .legal-footer a:hover,
+.app-shell[data-theme="light"] .auth-switch button,
+.app-shell[data-theme="light"] .auth-legal a,
+.app-shell[data-theme="light"] .legal-consent a {
+  color: #68795a;
+}
+.app-shell[data-theme="light"] .eyebrow-dot {
+  background: #879579;
+}
+.app-shell[data-theme="light"] .nav-item.active {
+  background: #eef0e7;
+  color: #4d5b43;
+  box-shadow: inset 3px 0 #879579;
+}
+.app-shell[data-theme="light"] .nav-item.active svg,
+.app-shell[data-theme="light"] .nav-count {
+  color: #5e704f;
+}
+.app-shell[data-theme="light"] .nav-count {
+  background: #e8ebdf;
+}
+.app-shell[data-theme="light"] .primary-btn {
+  background: #78866d;
+  border-color: #78866d;
+  box-shadow: 0 4px 10px rgba(102,119,86,.12);
+}
+.app-shell[data-theme="light"] .primary-btn:hover {
+  background: #626f58;
+  border-color: #626f58;
+}
+.app-shell[data-theme="light"] .heading-count,
+.app-shell[data-theme="light"] .detail-category {
+  background: #eff0e7;
+  border-color: #dfe2d5;
+  color: #68795a;
+}
+.app-shell[data-theme="light"] .search-field:focus-within,
+.app-shell[data-theme="light"] .select-wrap:focus-within,
+.app-shell[data-theme="light"] .solution-form input:focus,
+.app-shell[data-theme="light"] .solution-form textarea:focus,
+.app-shell[data-theme="light"] .solution-form select:focus,
+.app-shell[data-theme="light"] .auth-input:focus-within {
+  border-color: #9aa78a;
+  box-shadow: 0 0 0 3px rgba(120,134,109,.13);
+}
+.app-shell[data-theme="light"] .category-icon.blue,
+.app-shell[data-theme="light"] .empty-icon,
+.app-shell[data-theme="light"] .detail-steps li>span,
+.app-shell[data-theme="light"] .billing-toggle button.active {
+  background: #eff0e7;
+  color: #68795a;
+}
+.app-shell[data-theme="light"] .solution-title:hover {
+  color: #68795a;
+}
+.app-shell[data-theme="light"] .welcome-copy h2 span {
+  color: #78866d;
+}
+.app-shell[data-theme="light"] .banner-kicker {
+  color: #68795a;
+}
+.app-shell[data-theme="light"] .heading-count {
+  background: #eff0e7;
+  border-color: #dfe2d5;
+  color: #68795a;
+}
+.app-shell[data-theme="light"] .pricing-featured {
+  border-color: #c8d0bc;
+  box-shadow: 0 0 0 1px rgba(120,134,109,.12);
+}
+.app-shell[data-theme="light"] .profile-avatar,
+.app-shell[data-theme="light"] .workspace-avatar,
+.app-shell[data-theme="light"] .top-avatar {
+  background: #e9ecdf;
+  color: #59694f;
+  border-color: #d9dfcd;
+}
+.app-shell[data-theme="light"] .welcome-banner {
+  background:
+    radial-gradient(ellipse at 85% 0, rgba(165,173,144,.15) 0, transparent 43%),
+    linear-gradient(115deg, #fffdf8, #f1f0e7 80%);
+  border-color: #e2e2d7;
+}
+.app-shell[data-theme="light"] .orbit,
+.app-shell[data-theme="light"] .orbit-two {
+  border-color: rgba(120,134,109,.25);
+}
+.app-shell[data-theme="light"] .banner-sparkle {
+  color: #879579;
+}
+.app-shell[data-theme="light"] .stat-icon.blue {
+  background: #eff0e7;
+  color: #68795a;
+}
