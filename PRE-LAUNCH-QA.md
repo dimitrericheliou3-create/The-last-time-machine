@@ -84,7 +84,7 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [x] The browser Supabase client explicitly enables URL-session detection and persistent sessions, so a successful confirmation can restore the session and render the signed-in workspace without a second login.
 - [x] Signup instructions now tell the user that confirming the email will open the workspace automatically.
 - [ ] End-to-end test with a new disposable account: submit signup, open the email confirmation link, confirm the browser returns to the deployed app already signed in, and verify the new private workspace loads.
-- [ ] In Supabase Authentication → URL Configuration, verify the deployed app origin is an allowed Redirect URL (and set the correct Site URL). If a custom domain is used, allow-list that domain as well.
+- [ ] In Supabase Dashboard → Authentication → URL Configuration, set **Site URL** to `https://the-last-time-machine.pages.dev` and add `https://the-last-time-machine.pages.dev/**` to **Redirect URLs**. If a custom domain is used, set Site URL to that domain and allow-list it too. Then request a fresh confirmation/reset email; links already sent may still contain the old `localhost:3000` destination. If a custom email template builds its own URL, make sure it respects the provided redirect (`{{ .RedirectTo }}`) rather than hardcoding `{{ .SiteURL }}`. See https://supabase.com/docs/guides/auth/redirect-urls.
 
 ## Dashboard UI audit follow-up — legal routes, metric affordances, and naming
 
