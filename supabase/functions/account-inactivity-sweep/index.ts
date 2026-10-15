@@ -217,6 +217,15 @@ Deno.serve(async (req: Request) => {
     }
     if (!safeToDelete) { report.protected++; continue; }
 
+    // Clean up the user's profile avatar too; Storage does not cascade with auth-user deletion.
+    const { data: avatarProfile, error: avatarProfileError } = await admin.from("profiles")
+      .select("avatar_path").eq("user_id", userId).maybeSingle();
+    if (avatarProfileError) { report.protected++; continue; }
+    if (avatarProfile?.avatar_path) {
+      const { error: avatarRemoveError } = await admin.storage.from("profile-avatars").remove([avatarProfile.avatar_path]);
+      if (avatarRemoveError) { report.protected++; continue; }
+    }
+
     // Keep shared-workspace content and reassign authorship before removing this member.
     const { data: memberships, error: membershipsError } = await admin.from("workspace_members")
       .select("workspace_id,workspaces(owner_id)").eq("user_id", userId);
