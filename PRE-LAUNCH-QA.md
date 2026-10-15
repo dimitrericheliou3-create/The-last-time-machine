@@ -115,6 +115,7 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [x] Workspace owners can enable/disable Solution review only while the workspace has an active Business subscription.
 - [x] New and edited solutions become pending when review is enabled; only approved solutions are visible to ordinary workspace members.
 - [x] Owners and admins can approve submissions or request changes; the latest submitter can still see their own pending revision.
+- [x] Private image reads are filtered through visible solution rows so review-pending images are not visible to unrelated workspace members.
 - [x] Disabling review or losing Business entitlement automatically approves pending solutions and disables the setting.
 - [ ] Test with separate owner, admin, editor, and view-only accounts: pending visibility, approval, request-changes, resubmission, and attempts to spoof review status over the API.
 - [ ] Test that Starter/Team workspaces cannot enable the setting directly through the API, and that cancelling/downgrading a Business subscription disables the feature safely.
