@@ -3451,3 +3451,11 @@ body,.auth-shell,.loading-screen {
 .review-toggle-control input:focus-visible+.review-toggle-switch{outline:2px solid var(--accent,#7da2ff);outline-offset:3px}
 .review-toggle-control input:disabled+.review-toggle-switch{opacity:.6}
 .review-toggle-control:has(input:disabled){cursor:wait;opacity:.8}
+
+.review-note-field{display:grid;gap:7px;margin-top:18px;font-size:12px;font-weight:700;color:var(--text,#eef2fa)}
+.review-note-field>span{font-size:10px;font-weight:500;color:var(--muted,#9ca3af)}
+.review-note-field textarea{width:100%;resize:vertical;min-height:76px;border:1px solid var(--line,#303746);border-radius:10px;background:var(--input-bg,rgba(255,255,255,.025));color:var(--text,#eef2fa);font:inherit;font-size:12px;line-height:1.55;padding:11px;outline:none}
+.review-note-field textarea:focus{border-color:rgba(111,142,255,.7);box-shadow:0 0 0 3px rgba(111,142,255,.1)}
+.review-feedback{margin:15px 0;padding:13px 14px;border:1px solid rgba(255,132,151,.25);border-radius:11px;background:rgba(255,132,151,.06)}
+.review-feedback strong{font-size:12px;color:#ff9aaa}
+.review-feedback p{margin:6px 0 0;color:var(--text,#eef2fa);font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
