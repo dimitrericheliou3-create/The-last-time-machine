@@ -1562,22 +1562,27 @@ function SettingsPage({workspace,activePlanKey,canRenameWorkspace,workspaceName,
       </section>
       <section className="team-placeholder solution-review-settings" style={{textAlign:'left',alignItems:'stretch'}}>
         <div className="eyebrow">QUALITY CONTROL</div><h2 style={{marginTop:10}}>Solution review</h2>
-        {activePlanKey !== 'business' ? <>
-          <p>Have important solutions checked before they become available to your whole team. Enable an approval queue with the Business plan.</p>
-          <div className="review-plan-lock"><Crown size={18}/><span><strong>Business plan feature</strong><small>New and edited solutions can require owner or admin approval.</small></span></div>
-          <button type="button" className="secondary-btn review-plans-button" onClick={onViewPlans}><Crown size={16}/> View plans</button>
-        </> : canRenameWorkspace ? <>
-          <p>When enabled, new and edited solutions wait for approval before they appear in the shared knowledge base. Workspace owners and admins can approve submissions or request changes.</p>
-          <label className="review-toggle-control">
-            <input type="checkbox" checked={!!workspace?.solution_review_enabled} onChange={e=>onToggleSolutionReview(e.target.checked)} disabled={solutionReviewSaving}/>
-            <span className="review-toggle-switch" aria-hidden="true"></span>
-            <span className="review-toggle-copy"><strong>{workspace?.solution_review_enabled ? 'Solution review is enabled' : 'Enable solution review'}</strong><small>{workspace?.solution_review_enabled ? 'New and edited solutions need approval.' : 'Approved solutions continue to publish immediately.'}</small></span>
-          </label>
-          {solutionReviewSaving&&<p className="theme-status" role="status">Updating solution review…</p>}
-          {solutionReviewError&&<div className="form-error" role="alert">{solutionReviewError}</div>}
-        </> : <>
-          <p>Solution review is {workspace?.solution_review_enabled ? 'enabled' : 'available'} for this Business workspace. Only the workspace owner can change this setting.</p>
-        </>}
+        <p>When enabled, new and edited solutions wait for approval before they appear in the shared knowledge base. Workspace owners and admins can approve submissions or request changes.</p>
+        <label className={`review-toggle-control ${activePlanKey !== 'business' ? 'review-toggle-locked' : ''}`}>
+          <input
+            type="checkbox"
+            checked={activePlanKey === 'business' && !!workspace?.solution_review_enabled}
+            onChange={e=>onToggleSolutionReview(e.target.checked)}
+            disabled={activePlanKey !== 'business' || solutionReviewSaving || !canRenameWorkspace}
+            aria-label="Enable solution review"
+          />
+          <span className="review-toggle-switch" aria-hidden="true"></span>
+          <span className="review-toggle-copy">
+            <strong>{activePlanKey !== 'business' ? 'Locked — Business plan required' : workspace?.solution_review_enabled ? 'Solution review is enabled' : 'Enable solution review'}</strong>
+            <small>{activePlanKey !== 'business' ? 'Upgrade to Business to unlock this setting.' : workspace?.solution_review_enabled ? 'New and edited solutions need approval.' : 'Approved solutions continue to publish immediately.'}</small>
+          </span>
+          {activePlanKey !== 'business' && <LockKeyhole size={17} className="review-lock-icon" aria-hidden="true"/>}
+        </label>
+        {activePlanKey !== 'business' && <div className="review-plan-lock"><Crown size={18}/><span><strong>Business plan feature</strong><small>Unlock approval controls for your team’s knowledge base.</small></span></div>}
+        {activePlanKey !== 'business' && <button type="button" className="secondary-btn review-plans-button" onClick={onViewPlans}><Crown size={16}/> View plans</button>}
+        {activePlanKey === 'business' && !canRenameWorkspace && <p className="theme-status" role="status">Only the workspace owner can change this setting.</p>}
+        {solutionReviewSaving&&<p className="theme-status" role="status">Updating solution review…</p>}
+        {solutionReviewError&&<div className="form-error" role="alert">{solutionReviewError}</div>}
       </section>
       <section className="team-placeholder" style={{textAlign:'left',alignItems:'stretch'}}>
         <div className="eyebrow">YOUR DATA</div><h2 style={{marginTop:10}}>Export your knowledge</h2><p>Download your saved solutions as a CSV file that opens in Excel or Google Sheets. Keep a backup or use it for reporting.</p><button className="secondary-btn" onClick={onExport}><FileText size={16}/> Export solutions (.csv)</button>
