@@ -19,7 +19,7 @@
 .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:26px;align-items:stretch}
 .pricing-card{position:relative;border:1px solid var(--line,#303746);background:rgba(255,255,255,.025);border-radius:18px;padding:24px;display:flex;flex-direction:column;min-width:0}
 .pricing-featured{border-color:rgba(111,142,255,.65);box-shadow:0 0 0 1px rgba(111,142,255,.15)}
-.pricing-badge{font-size:10px;letter-spacing:.1em;font-weight:800;color:#9eb4ff;margin-bottom:12px}
+.pricing-badge{display:inline-flex;align-self:flex-start;width:fit-content;max-width:100%;box-sizing:border-box;align-items:center;position:relative;padding:6px 10px;border:1px solid rgba(111,142,255,.26);border-radius:999px;background:rgba(73,104,157,.09);font-size:10px;letter-spacing:.1em;font-weight:800;color:#9eb4ff;margin-bottom:12px;white-space:nowrap}
 .pricing-card h2{font-size:22px;margin:0 0 8px}
 .pricing-card>p{font-size:13px;line-height:1.6;color:var(--muted,#9ca3af);min-height:42px}
 .pricing-price{display:flex;align-items:baseline;gap:5px;margin:14px 0 18px}
