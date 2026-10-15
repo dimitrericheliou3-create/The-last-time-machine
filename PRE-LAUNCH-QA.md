@@ -121,3 +121,30 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [ ] Test with separate owner, admin, editor, and view-only accounts: pending visibility, approval, request-changes, resubmission, and attempts to spoof review status over the API.
 - [ ] Test that Starter/Team workspaces cannot enable the setting directly through the API, and that cancelling/downgrading a Business subscription disables the feature safely.
 - [ ] Test an editor revising a solution created by another member, image replacement while pending, and turning review off with pending items.
+
+## Stress-test follow-up — 2026-10-15
+
+### Fixes applied
+
+- [x] Added database indexes for `solutions.review_submitted_by` and `solutions.reviewed_by`; the migration is committed and has been applied to production.
+- [x] Workspace invitations now paginate through Auth users instead of checking only the first 1,000 accounts. The function source is versioned under `supabase/functions/workspace-invitations/index.ts` and deployed as version 3.
+- [x] Manual account deletion removes the departing user's profile avatar from private Storage as well as their personal-workspace solution images. Source is versioned under `supabase/functions/delete-account/index.ts`; deployed as version 2.
+- [x] The prepared inactivity-deletion function now removes a departing user's profile avatar too. Source is versioned under `supabase/functions/account-inactivity-sweep/index.ts`; deployed as version 3. This function remains dry-run-by-default and must not be scheduled for real deletion until the complete reminder/deletion test plan above passes.
+- [x] Added a GitHub Actions build workflow that runs `npm ci` and `npm run build` on pushes to `main` and pull requests. The result must be green before launch; adding the workflow does not itself prove the build succeeded.
+
+### Manual tasks that still block a responsible public launch
+
+- [ ] Check the new GitHub Actions run and fix any build failure. Do not mark this passed until a green run is visible in GitHub Actions.
+- [ ] Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in Cloudflare Pages for both Production and Preview, then deploy and verify sign-in/workspace loading. The currently tracked root `.env` contains only these public browser values, not a service-role or payment secret; do **not** remove it until the Cloudflare build variables have been saved and a deployment without relying on the file has been verified.
+- [ ] Leaked-password protection is a Supabase Pro-or-higher feature. If the project is upgraded, enable it in the Supabase Dashboard under Authentication password/security settings (documentation: https://supabase.com/docs/guides/auth/password-security). Do not treat this warning as fixable on the current Free plan without upgrading.
+- [ ] Create two disposable test accounts and verify workspace, solution, profile, and image isolation through both the UI and direct API access. Test read, insert, update, and delete attempts against the *other* account's workspace; every unauthorized operation must fail or return no private records.
+- [ ] Complete the signup-confirmation, login/logout, password reset, profile/avatar, workspace switching, invite expiry/reuse/email-mismatch, solution-cap, solution-review-role, and account-deletion test cases already listed above against the deployed domain.
+- [ ] Test account deletion with an owned personal workspace and an avatar in a disposable account; verify the avatar object, solution image objects, workspace, profile, and Auth user are removed. Also verify deletion refuses when the account owns a workspace with additional members.
+- [ ] Confirm backup retention and perform an actual restore drill; configure production monitoring, rate/abuse controls, and incident response contact procedures.
+- [ ] Obtain legal review of Terms, Privacy, and Acceptable Use for Saint Lucia and the countries targeted.
+
+### Known warnings intentionally not changed by this code patch
+
+- `public.record_user_activity()` still appears in Supabase Security Advisor because it must be callable by the signed-in app. It has no arguments, an empty search path, and updates only the authenticated caller's activity timestamp with a one-hour throttle. Keep this constrained design unless the activity-recording architecture is replaced; do not simply revoke execute or the app's activity tracking will break.
+- Payment functions, checkout configuration, plan prices, and payment lifecycle have not been modified in this follow-up. Billing remains a separate launch gate.
+
