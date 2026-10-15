@@ -16,7 +16,7 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [x] Add operator name (Dimitre Richelieu), business address (Mourne Dou Don Road, Castries, Saint Lucia), and support/privacy email (richelieureserved@gmail.com) to legal pages and source documents.
 - [ ] Obtain legal review for Saint Lucia and the countries targeted.
 - [ ] Leaked-password protection is not included on this organization's Free plan; if upgrading to Pro or above, enable it in Supabase Auth settings (see https://supabase.com/docs/guides/auth/password-security).
-- [ ] `npm ci` succeeds from a clean checkout and `npm run build` succeeds.
+- [x] `npm ci` succeeds from a clean checkout and `npm run build` succeeds. Verified by GitHub Actions on main commit `544583462e7d821af00d47f17059c414969c9109`: https://github.com/dimitrericheliou3-create/The-last-time-machine/actions/runs/38662362001
 - [ ] Test sign-up, confirmation, login, sign-out, password reset, and legal acceptance record on the deployed domain.
 - [ ] Test with two separate accounts that neither can read or modify the other's workspace, solutions, members, or images, including direct API requests.
 - [ ] Test creating multiple workspaces on one account, switching between them, refreshing, and confirming each workspace's solutions and permissions remain isolated.
@@ -36,7 +36,7 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [ ] Test invite acceptance for a user who already belongs to another workspace; verify the invited workspace remains selected after URL cleanup and refresh.
 - [ ] Confirm frontend preview pricing and server-controlled checkout price values match (Team $20/$200; Business $39/$390).
 - [ ] Keep checkout in preview mode until HandyPay secrets are configured and payment/webhook flows are tested end to end.
-- [ ] Add a scalable existing-user lookup to workspace invitations before growth makes the current first-1,000-user scan insufficient.
+- [x] Workspace invitation lookup paginates Auth users, removing the previous first-1,000-user limit. Deployed Edge Function version 3; source: `supabase/functions/workspace-invitations/index.ts`.
 - [ ] Decide whether users need a separate delete-workspace action that preserves their account.
 
 ## Free preview solution cap
@@ -134,7 +134,7 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 
 ### Manual tasks that still block a responsible public launch
 
-- [ ] Check the new GitHub Actions run and fix any build failure. Do not mark this passed until a green run is visible in GitHub Actions.
+- [x] GitHub Actions `Install and build` completed successfully on main commit `544583462e7d821af00d47f17059c414969c9109`; both `npm ci` and `npm run build` passed: https://github.com/dimitrericheliou3-create/The-last-time-machine/actions/runs/38662362001
 - [ ] Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in Cloudflare Pages for both Production and Preview, then deploy and verify sign-in/workspace loading. The currently tracked root `.env` contains only these public browser values, not a service-role or payment secret; do **not** remove it until the Cloudflare build variables have been saved and a deployment without relying on the file has been verified.
 - [ ] Leaked-password protection is a Supabase Pro-or-higher feature. If the project is upgraded, enable it in the Supabase Dashboard under Authentication password/security settings (documentation: https://supabase.com/docs/guides/auth/password-security). Do not treat this warning as fixable on the current Free plan without upgrading.
 - [ ] Create two disposable test accounts and verify workspace, solution, profile, and image isolation through both the UI and direct API access. Test read, insert, update, and delete attempts against the *other* account's workspace; every unauthorized operation must fail or return no private records.
