@@ -3459,3 +3459,9 @@ body,.auth-shell,.loading-screen {
 .review-feedback{margin:15px 0;padding:13px 14px;border:1px solid rgba(255,132,151,.25);border-radius:11px;background:rgba(255,132,151,.06)}
 .review-feedback strong{font-size:12px;color:#ff9aaa}
 .review-feedback p{margin:6px 0 0;color:var(--text,#eef2fa);font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+
+.review-toggle-locked{cursor:not-allowed;border-style:dashed;border-color:rgba(151,164,188,.28);background:rgba(124,145,190,.045)}
+.review-toggle-locked:hover{border-color:rgba(151,164,188,.4);background:rgba(124,145,190,.06)}
+.review-toggle-locked .review-toggle-switch{opacity:.42;filter:grayscale(.35)}
+.review-toggle-locked .review-toggle-copy strong{color:var(--muted,#9ca3af)}
+.review-lock-icon{margin-left:auto;flex-shrink:0;color:var(--muted,#9ca3af)}
