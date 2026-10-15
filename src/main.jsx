@@ -132,6 +132,8 @@ function App() {
   const [workspaceName, setWorkspaceName] = useState('');
   const [settingsMessage, setSettingsMessage] = useState('');
   const [settingsError, setSettingsError] = useState('');
+  const [solutionReviewSaving, setSolutionReviewSaving] = useState(false);
+  const [solutionReviewError, setSolutionReviewError] = useState('');
   const [inviteToken, setInviteToken] = useState(() => new URLSearchParams(window.location.search).get('invite') || '');
   const [inviteActionLoading, setInviteActionLoading] = useState(false);
   const [inviteActionError, setInviteActionError] = useState('');
@@ -239,7 +241,11 @@ function App() {
       if (data?.error) throw new Error(data.error);
       if (!data?.success || !data?.workspace?.id) throw new Error('The invitation response was incomplete. Please ask the owner to send a new invitation.');
       preferredWorkspaceIdRef.current = data.workspace.id;
-      setWorkspace(data.workspace); setWorkspaceName(data.workspace.name || '');
+      const { data: joinedWorkspace, error: joinedWorkspaceError } = await supabase.from('workspaces')
+        .select('id,name,owner_id,created_at,solution_review_enabled').eq('id', data.workspace.id).single();
+      if (joinedWorkspaceError) throw joinedWorkspaceError;
+      setWorkspace({ ...joinedWorkspace, membershipRole: 'member' });
+      setWorkspaceName(joinedWorkspace.name || '');
       const { data: subscriptionRow } = await supabase.from('workspace_subscriptions').select('plan_key,status').eq('workspace_id', data.workspace.id).maybeSingle();
       const activePlan = subscriptionRow?.status === 'active' ? subscriptionRow.plan_key : 'starter';
       setActivePlanKey(activePlan);
@@ -279,7 +285,7 @@ function App() {
     try {
       const { data: memberships, error: memberError } = await supabase
         .from('workspace_members')
-        .select('workspace_id, role, joined_at, workspaces(id,name,owner_id,created_at)')
+        .select('workspace_id, role, joined_at, workspaces(id,name,owner_id,created_at,solution_review_enabled)')
         .eq('user_id', user.id)
         .order('joined_at', { ascending: true });
       if (memberError) throw memberError;
@@ -306,7 +312,7 @@ function App() {
       if (!current) {
         const { data: created, error: createError } = await supabase.from('workspaces')
           .insert({ name: `${personNameFromEmail(user.email)} workspace`, owner_id: user.id })
-          .select('id,name,owner_id,created_at').single();
+          .select('id,name,owner_id,created_at,solution_review_enabled').single();
         if (createError) throw createError;
         // The database trigger creates the owner's membership row. Add the new workspace
         // to the local list immediately so the picker is correct on the first visit.
@@ -377,7 +383,7 @@ function App() {
     try {
       const { data, error } = await supabase.from('workspaces')
         .insert({ name, owner_id: session.user.id })
-        .select('id,name,owner_id,created_at').single();
+        .select('id,name,owner_id,created_at,solution_review_enabled').single();
       if (error) throw error;
 
       // Supabase's workspace trigger creates the owner membership automatically.
@@ -594,6 +600,39 @@ function App() {
     finally { setSaving(false); }
   }
 
+  async function toggleSolutionReview(enabled) {
+    setSolutionReviewError('');
+    if (!supabase || !workspace?.id) {
+      setSolutionReviewError('Workspace is not available.');
+      return;
+    }
+    if (workspace.owner_id !== session?.user?.id) {
+      setSolutionReviewError('Only the workspace owner can change this setting.');
+      return;
+    }
+    if (enabled && activePlanKey !== 'business') {
+      setSolutionReviewError('Solution review requires an active Business plan.');
+      return;
+    }
+    setSolutionReviewSaving(true);
+    try {
+      const { data, error } = await supabase.from('workspaces')
+        .update({ solution_review_enabled: enabled })
+        .eq('id', workspace.id)
+        .select('id,name,owner_id,created_at,solution_review_enabled').single();
+      if (error) throw error;
+      setWorkspace(current => current?.id === data.id ? { ...current, ...data } : current);
+      setAvailableWorkspaces(previous => previous.map(item => item.id === data.id ? { ...item, ...data } : item));
+      notify(enabled
+        ? 'Solution review is on. New and edited solutions need approval.'
+        : 'Solution review is off. Pending solutions are now approved.');
+    } catch (e) {
+      setSolutionReviewError(e.message || 'Could not update the solution review setting.');
+    } finally {
+      setSolutionReviewSaving(false);
+    }
+  }
+
   async function deleteAccount() {
     if (!supabase || !session?.access_token) return;
     const confirmation = prompt('This permanently deletes your account. Type DELETE to confirm. If you own a workspace with other members, transfer ownership first.');
@@ -720,7 +759,7 @@ function App() {
         }
         const decorated = (await attachImageUrls([data]))[0];
         setSolutions(prev=>prev.map(s=>s.id===decorated.id?decorated:s));
-        notify('Solution updated');
+        notify(decorated.review_status === 'pending' ? 'Solution updated and submitted for review' : 'Solution updated');
       } else {
         const {data,error} = await supabase.from('solutions').insert({
           workspace_id:workspace.id, created_by:session.user.id, title:payload.title,
@@ -730,7 +769,7 @@ function App() {
         if (error) throw error;
         const decorated = (await attachImageUrls([data]))[0];
         setSolutions(prev=>[decorated,...prev]);
-        notify('Solution saved to your workspace');
+        notify(decorated.review_status === 'pending' ? 'Solution submitted for review' : 'Solution saved to your workspace');
       }
       setModal(null); setSelected(null);
     } catch(e) {
@@ -770,6 +809,35 @@ function App() {
       notify('Solution deleted');
     } catch (e) {
       notify(e.message || 'Could not delete solution');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const canReviewSolutions = !!workspace && (workspace.owner_id === session?.user?.id || workspace.membershipRole === 'admin');
+  async function reviewSolution(item, decision) {
+    if (!supabase || !item?.id || !['approved', 'changes_requested'].includes(decision)) return;
+    if (activePlanKey !== 'business' || !workspace?.solution_review_enabled) {
+      notify('Solution review requires an enabled Business plan setting.');
+      return;
+    }
+    if (!canReviewSolutions) {
+      notify('Only workspace owners and admins can review solutions.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.from('solutions')
+        .update({ review_status: decision })
+        .eq('id', item.id)
+        .select().single();
+      if (error) throw error;
+      const decorated = (await attachImageUrls([data]))[0];
+      setSolutions(previous => previous.map(solution => solution.id === decorated.id ? decorated : solution));
+      setSelected(decorated);
+      notify(decision === 'approved' ? 'Solution approved and published' : 'Changes requested — this solution remains hidden from the team');
+    } catch (e) {
+      notify(e.message || 'Could not update the solution review.');
     } finally {
       setSaving(false);
     }
@@ -894,7 +962,7 @@ function App() {
           activeNav==='Team' ? <TeamPage workspace={workspace} session={session} notify={notify} /> :
           activeNav==='Plans' ? <PlansPage notify={notify} workspace={workspace} session={session} /> :
           activeNav==='Profile' ? <ProfilePage profile={profile} email={session.user.email} loading={profileLoading} loadError={profileLoadError} saving={profileSaving} onSave={saveProfile} notify={notify} /> :
-          activeNav==='Settings' ? <SettingsPage workspace={workspace} canRenameWorkspace={workspace?.owner_id === session.user.id} workspaceName={workspaceName} setWorkspaceName={setWorkspaceName} onSave={saveWorkspaceName} saving={saving} message={settingsMessage} error={settingsError} onExport={exportSolutions} email={session.user.email} onSignOut={signOut} onDeleteAccount={deleteAccount} deletingAccount={deletingAccount} deleteAccountError={deleteAccountError} themeKey={themeKey} onThemeChange={changeTheme} themeSaving={themeSaving} themeError={themeError} themeMessage={themeMessage} /> :
+          activeNav==='Settings' ? <SettingsPage workspace={workspace} activePlanKey={activePlanKey} canRenameWorkspace={workspace?.owner_id === session.user.id} workspaceName={workspaceName} setWorkspaceName={setWorkspaceName} onSave={saveWorkspaceName} saving={saving} message={settingsMessage} error={settingsError} onExport={exportSolutions} email={session.user.email} onSignOut={signOut} onDeleteAccount={deleteAccount} deletingAccount={deletingAccount} deleteAccountError={deleteAccountError} themeKey={themeKey} onThemeChange={changeTheme} themeSaving={themeSaving} themeError={themeError} themeMessage={themeMessage} onToggleSolutionReview={toggleSolutionReview} solutionReviewSaving={solutionReviewSaving} solutionReviewError={solutionReviewError} onViewPlans={()=>setActiveNav('Plans')} /> :
           <>
             <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR KNOWLEDGE BASE</div><h1>Solutions <span className="heading-count">{solutions.length}</span></h1><p className="page-subtitle">Every problem solved is a lesson worth keeping.</p><div className="solution-limit-note">{activePlanKey === 'team' ? `Team: ${Math.min(solutions.length, TEAM_SOLUTION_LIMIT)} / ${TEAM_SOLUTION_LIMIT} solutions` : activePlanKey === 'business' ? `Business: ${solutions.length.toLocaleString()} / ${BUSINESS_INCLUDED_SOLUTIONS.toLocaleString()} included solutions` : `Free preview: ${Math.min(solutions.length, FREE_SOLUTION_LIMIT)} / ${FREE_SOLUTION_LIMIT} solutions`}</div>{activePlanKey === 'business' && solutions.length > BUSINESS_INCLUDED_SOLUTIONS && <p className="page-subtitle">Estimated overage: {moneyForOverage((solutions.length - BUSINESS_INCLUDED_SOLUTIONS) * BUSINESS_EXTRA_SOLUTION_MONTHLY_PRICE)} / month for {solutions.length - BUSINESS_INCLUDED_SOLUTIONS} extra solution(s). Overage billing is not active in this preview.</p>}</div>{solutions.length>0&&<button className="primary-btn" onClick={()=>{if((activePlanKey==='starter'&&solutions.length>=FREE_SOLUTION_LIMIT)||(activePlanKey==='team'&&solutions.length>=TEAM_SOLUTION_LIMIT)){setActiveNav('Plans');notify(activePlanKey==='team'?`Team plan limit reached: ${TEAM_SOLUTION_LIMIT} solutions per workspace.`:`Free preview limit reached: ${FREE_SOLUTION_LIMIT} solutions per workspace.`);return;}setSelected(null);setSaveError('');setModal({kind:'new'});}}><Plus size={18}/> New solution</button>}</div>
             <div className="solutions-workspace-layout">
@@ -967,7 +1035,7 @@ function App() {
         </form>
       </div>
     </div>}
-    {modal&&<Modal kind={modal.kind} item={selected} categories={categoryOptions} onClose={()=>{setModal(null);setSelected(null);setSaveError('');}} onSave={saveSolution} error={saveError} onEdit={()=>{setSaveError('');setModal({kind:'edit'});}} onDelete={deleteSolution} saving={saving} signedIn={!!session} canEdit={canEditSolution} canDelete={canDeleteSolution} />}
+    {modal&&<Modal kind={modal.kind} item={selected} categories={categoryOptions} onClose={()=>{setModal(null);setSelected(null);setSaveError('');}} onSave={saveSolution} error={saveError} onEdit={()=>{setSaveError('');setModal({kind:'edit'});}} onDelete={deleteSolution} onReview={reviewSolution} saving={saving} signedIn={!!session} canEdit={canEditSolution} canDelete={canDeleteSolution} canReview={canReviewSolutions} reviewEnabled={!!workspace?.solution_review_enabled} />}
     {toast&&<div className="toast"><Check size={17}/>{toast}</div>}
   </div>;
 }
@@ -1003,7 +1071,7 @@ function SolutionCard({item,index,onOpen,onEdit,onDelete,canEdit=true,canDelete=
     event.currentTarget.style.setProperty('--tilt-x', '0deg');
     event.currentTarget.style.setProperty('--tilt-y', '0deg');
   }
-  return <article className="solution-card" onPointerMove={handlePointerMove} onPointerLeave={resetPointer} style={{animationDelay:`${index*55}ms`}}><div className="solution-card-top"><div className={`category-icon ${colors[index%colors.length]}`}>{iconMap[item.category]||<FileText size={18}/>}</div><div className="card-actions">{canEdit&&<button className="icon-btn" onClick={onEdit} title="Edit solution" aria-label={`Edit ${item.title}`}><MoreHorizontal size={19}/></button>}{canDelete&&<button className="icon-btn delete-card-btn" onClick={onDelete} title="Delete solution" aria-label={`Delete ${item.title}`}><Trash2 size={17}/></button>}</div></div><div className="solution-category">{item.category||'General'}</div><button className="solution-title" onClick={onOpen}>{item.title}</button><p className="solution-description">{item.problem_description||'No problem description added yet.'}</p>{item.image_url&&<img className="solution-card-image" src={item.image_url} alt={`Reference for ${item.title}`} loading="lazy" />}<div className="solution-card-bottom"><div className="last-fixed"><Clock3 size={14}/><span>Updated {timeAgo(item.updated_at||item.created_at)}</span></div></div></article>;
+  return <article className="solution-card" onPointerMove={handlePointerMove} onPointerLeave={resetPointer} style={{animationDelay:`${index*55}ms`}}><div className="solution-card-top"><div className={`category-icon ${colors[index%colors.length]}`}>{iconMap[item.category]||<FileText size={18}/>}</div><div className="card-actions">{canEdit&&<button className="icon-btn" onClick={onEdit} title="Edit solution" aria-label={`Edit ${item.title}`}><MoreHorizontal size={19}/></button>}{canDelete&&<button className="icon-btn delete-card-btn" onClick={onDelete} title="Delete solution" aria-label={`Delete ${item.title}`}><Trash2 size={17}/></button>}</div></div><div className="solution-category">{item.category||'General'}</div><button className="solution-title" onClick={onOpen}>{item.title}</button>{item?.review_status&&item.review_status!=='approved'&&<div className={`solution-review-badge status-${item.review_status}`}>{item.review_status==='pending'?'Pending review':'Changes requested'}</div>}<p className="solution-description">{item.problem_description||'No problem description added yet.'}</p>{item.image_url&&<img className="solution-card-image" src={item.image_url} alt={`Reference for ${item.title}`} loading="lazy" />}<div className="solution-card-bottom"><div className="last-fixed"><Clock3 size={14}/><span>Updated {timeAgo(item.updated_at||item.created_at)}</span></div></div></article>;
 }
 
 function Dashboard({solutions,workspace,session,displayName,query,setQuery,onNew,onCreateWorkspace,onBrowse,onOpenSolution,onEditSolution,onDeleteSolution,canCreate=true,canEdit=true,canDelete=true}) {
@@ -1454,7 +1522,7 @@ function ProfilePage({profile,email,loading,loadError,saving,onSave}) {
   </>;
 }
 
-function SettingsPage({workspace,canRenameWorkspace,workspaceName,setWorkspaceName,onSave,saving,message,error,onExport,email,onSignOut,onDeleteAccount,deletingAccount,deleteAccountError,themeKey,onThemeChange,themeSaving,themeError,themeMessage}) {
+function SettingsPage({workspace,activePlanKey,canRenameWorkspace,workspaceName,setWorkspaceName,onSave,saving,message,error,onExport,email,onSignOut,onDeleteAccount,deletingAccount,deleteAccountError,themeKey,onThemeChange,themeSaving,themeError,themeMessage,onToggleSolutionReview,solutionReviewSaving,solutionReviewError,onViewPlans}) {
   const themePresets = [
     {key:'dark',name:'Studio Light',description:'Clean white dashboard with crisp blue accents',swatches:['#f5f7fb','#ffffff','#557ce8']},
     {key:'midnight',name:'Midnight',description:'Deep navy with bright cyan accents',swatches:['#081321','#122640','#55c7ff']},
@@ -1492,6 +1560,25 @@ function SettingsPage({workspace,canRenameWorkspace,workspaceName,setWorkspaceNa
         <div className="eyebrow">WORKSPACE</div><h2 style={{marginTop:10}}>Workspace details</h2><p>Give your knowledge base a name your team will recognise.</p>
         {canRenameWorkspace ? <form onSubmit={onSave} className="solution-form"><label>Workspace name<input value={workspaceName} onChange={e=>setWorkspaceName(e.target.value)} maxLength={120} required placeholder="e.g. Acme Support Team"/></label>{error&&<div className="form-error" role="alert">{error}</div>}{message&&<div className="form-success">{message}</div>}<button className="primary-btn" disabled={saving}>{saving?'Saving…':<><Check size={16}/> Save workspace</>}</button></form> : <p className="page-subtitle" role="status">Only the workspace owner can change the workspace name. Ask the owner to update it in Settings.</p>}
       </section>
+      <section className="team-placeholder solution-review-settings" style={{textAlign:'left',alignItems:'stretch'}}>
+        <div className="eyebrow">QUALITY CONTROL</div><h2 style={{marginTop:10}}>Solution review</h2>
+        {activePlanKey !== 'business' ? <>
+          <p>Have important solutions checked before they become available to your whole team. Enable an approval queue with the Business plan.</p>
+          <div className="review-plan-lock"><Crown size={18}/><span><strong>Business plan feature</strong><small>New and edited solutions can require owner or admin approval.</small></span></div>
+          <button type="button" className="secondary-btn review-plans-button" onClick={onViewPlans}><Crown size={16}/> View plans</button>
+        </> : canRenameWorkspace ? <>
+          <p>When enabled, new and edited solutions wait for approval before they appear in the shared knowledge base. Workspace owners and admins can approve submissions or request changes.</p>
+          <label className="review-toggle-control">
+            <input type="checkbox" checked={!!workspace?.solution_review_enabled} onChange={e=>onToggleSolutionReview(e.target.checked)} disabled={solutionReviewSaving}/>
+            <span className="review-toggle-switch" aria-hidden="true"></span>
+            <span className="review-toggle-copy"><strong>{workspace?.solution_review_enabled ? 'Solution review is enabled' : 'Enable solution review'}</strong><small>{workspace?.solution_review_enabled ? 'New and edited solutions need approval.' : 'Approved solutions continue to publish immediately.'}</small></span>
+          </label>
+          {solutionReviewSaving&&<p className="theme-status" role="status">Updating solution review…</p>}
+          {solutionReviewError&&<div className="form-error" role="alert">{solutionReviewError}</div>}
+        </> : <>
+          <p>Solution review is {workspace?.solution_review_enabled ? 'enabled' : 'available'} for this Business workspace. Only the workspace owner can change this setting.</p>
+        </>}
+      </section>
       <section className="team-placeholder" style={{textAlign:'left',alignItems:'stretch'}}>
         <div className="eyebrow">YOUR DATA</div><h2 style={{marginTop:10}}>Export your knowledge</h2><p>Download your saved solutions as a CSV file that opens in Excel or Google Sheets. Keep a backup or use it for reporting.</p><button className="secondary-btn" onClick={onExport}><FileText size={16}/> Export solutions (.csv)</button>
       </section>
@@ -1510,7 +1597,7 @@ function LegalPage({page}) {
   return <div className="legal-shell"><div className="legal-top"><a className="brand legal-brand" href="/"><span className="brand-mark"><BrandClock size={20}/></span><span className="brand-name">The Last <span>Time Machine</span></span></a><a className="secondary-btn" href="/">Back to sign in</a></div><article className="legal-document"><div className="eyebrow"><span className="eyebrow-dot"/> LEGAL INFORMATION</div><h1>{title}</h1><p className="legal-effective">Version effective 13 October 2026 · Last updated 13 October 2026</p>{page==='terms'?<><h2>1. About the service</h2><p>The Last Time Machine is a workspace-based service for recording, searching, and reusing solutions to recurring business problems. Features may change. During preview or beta use, the service may be interrupted and features may be incomplete.</p><h2>2. Eligibility and accounts</h2><p>You must be legally able to enter a binding agreement where you live and be authorized to act for any business workspace you create. Keep your sign-in credentials secure, provide accurate account information, and promptly report suspected unauthorized access. If you are not legally eligible to agree to these terms, do not create an account.</p><h2>3. Workspace owners and members</h2><p>Workspace owners and administrators manage access and are responsible for inviting appropriate members. Members may be able to see workspace content. Do not add people who should not access that information. You are responsible for ensuring you have the right to upload content and share it with your workspace.</p><h2>4. Acceptable use</h2><p>You may not use the service unlawfully, infringe another person's rights, upload malware, probe or access accounts or data without permission, interfere with the service, or attempt to bypass access controls. Do not store passwords, payment-card details, government identifiers, health records, or other highly sensitive information in solution records.</p><h2>5. Your content</h2><p>You retain the rights you have in content you submit. You give the service permission to host, process, display, and back up that content only as reasonably necessary to operate, secure, and support the service. You are responsible for the accuracy and lawfulness of your content and should keep independent copies of important records.</p><h2>6. Availability and changes</h2><p>We aim to keep the service useful and secure but do not guarantee uninterrupted availability, error-free operation, or that every record can always be recovered. We may change or discontinue features and will make reasonable efforts to communicate material changes where appropriate.</p><h2>7. Suspension and termination</h2><p>Access may be suspended or terminated for security reasons, serious misuse, legal requirements, or material violations of these terms. You may stop using the service and request account deletion through Settings, subject to workspace ownership and data-retention constraints described in the Privacy Policy.</p><h2>8. Inactivity, account deletion, and workspace protection</h2><p>An account with no recorded activity for eight months may be scheduled for deletion after advance notices at approximately 30 days, 15 days, and 7 days before the deletion date. Signing in and using the service resets the inactivity period. To protect business records, accounts that own a workspace with other members or a workspace with an active or past-due subscription will not be automatically deleted until ownership or billing is resolved. Eligible accounts may lose sole-member workspaces, solutions, and reference images they own. Solutions in shared workspaces are retained for remaining members, and authorship may be reassigned to the workspace owner. Keep independent exports of important records. Mandatory legal rights and legally required retention take precedence.</p><h2>9. Disclaimers and limitation of liability</h2><p>To the fullest extent permitted by law, the service is provided on an “as available” basis and without warranties that the law does not allow us to disclaim. Nothing in these terms excludes or limits liability, consumer rights, or remedies that cannot lawfully be excluded or limited. To the fullest extent permitted by law, the operator will not be liable for indirect, incidental, special, consequential, exemplary, or punitive losses, loss of profits, loss of business, or loss of data. The operator’s total aggregate liability arising out of or related to the service will not exceed the greater of (a) the amount you paid to use the service during the 12 months before the event giving rise to the claim or (b) US$50. This cap does not apply where prohibited by law or to liability that cannot lawfully be limited.</p><h2>10. Subscriptions and billing</h2><p>The service is currently offered without paid subscriptions through this version of the terms. If paid plans are introduced, we will show the applicable price, billing interval, and material conditions before you purchase. Unless stated otherwise at checkout, subscriptions will renew for the displayed billing interval until cancelled. You may cancel future renewals using the available account or billing controls; cancellation generally takes effect at the end of the current paid period. Prices may exclude taxes, which will be shown or applied where required. Any price change for an existing subscription will be communicated in advance and will apply no earlier than the next renewal, subject to applicable law. Refunds are handled under the terms shown at purchase and mandatory law; nothing here removes non-waivable refund rights.</p><h2>11. Governing law and disputes</h2><p>These terms are governed by the laws of Saint Lucia, without preventing any mandatory consumer-protection rules that apply in your country of residence. Subject to those mandatory rights, the courts of Saint Lucia will have jurisdiction over disputes arising from these terms or the service. Nothing in this section prevents a consumer from bringing a claim in a court where applicable law gives them that right.</p><h2>12. Operator and contact</h2><p>The Last Time Machine is operated by Dimitre Richelieu, business address Mourne Dou Don Road, Castries, Saint Lucia. For support, privacy questions, or legal notices, email <a href="mailto:richelieureserved@gmail.com">richelieureserved@gmail.com</a>. These contact details do not imply that a separately incorporated company exists.</p></>:page==='privacy'?<><h2>1. Information we process</h2><p>Depending on how you use the service, we process your email address and authentication identifiers; your profile display name, optional username and bio, private profile-picture file, and selected interface color scheme; workspace name and membership; solution titles, problem descriptions, categories, steps, outcomes, and uploaded reference images; the last recorded time your account actively used the app; and basic technical information needed to operate and protect the service. Do not submit sensitive information that the service is not designed to handle.</p><h2>2. Purposes</h2><p>We use information to create and secure accounts, provide workspaces and knowledge-base features, support search and export, administer invitations, prevent abuse, maintain service reliability, and respond to support requests.</p><h2>3. Workspace visibility</h2><p>Workspace content is intended to be available to authorized workspace members and service administrators when necessary for support or security. Workspace owners control invitations. Do not upload information unless you are permitted to share it with the workspace.</p><h2>4. Providers and international processing</h2><p>We use Supabase for authentication, database services, and private image storage. The Supabase project is configured in the US East (North Virginia) region. The application frontend is deployed separately from Supabase; the identity and processing location of that frontend host depend on the deployment configuration. Service providers may process information in other countries under their applicable terms and safeguards. We update this notice when our material providers or processing arrangements change.</p><h2>5. Cookies and local storage</h2><p>The current application does not intentionally use advertising cookies or third-party analytics. Supabase authentication may use browser storage to keep your session signed in. If analytics, advertising, or other non-essential tracking is added later, this policy and any required consent controls must be updated before enabling it.</p><h2>6. Retention and deletion</h2><p>We retain information while an account or workspace needs it to provide the service, subject to security, legal, backup, and dispute-resolution needs. After eight months without recorded activity, an eligible account may be deleted following reminder notices at approximately 30 days, 15 days, and 7 days before deletion; signing in and using the app resets the timer. Accounts that own a workspace with other members or a workspace with an active or past-due subscription are protected from automatic deletion until the issue is resolved. Sole-member workspaces belonging to eligible deleted accounts may be removed with their solutions and images. Shared workspace records are retained for remaining members and authorship may be reassigned to the workspace owner. Backups may persist temporarily until normal rotation. Any mandatory retention obligations take precedence.</p><h2>7. Security</h2><p>We use access controls and private storage policies intended to limit access to authorized workspaces. No internet service can promise absolute security. Users should keep credentials secure and avoid uploading secrets or highly sensitive personal data. We continually work to maintain appropriate security controls, but no controls can eliminate every risk or guarantee that unauthorized access will never occur.</p><h2>8. Your choices and rights</h2><p>Depending on the law that applies to you, you may have the right to request access to your personal information, receive a copy of it, correct inaccurate information, request deletion or restriction of processing, object to certain processing, withdraw consent where processing relies on consent, and complain to a data-protection regulator. You may also have rights to data portability or to challenge certain automated decisions where the law provides them. You can export solution records and initiate account deletion from Settings. For requests that cannot be completed in the app, email <a href="mailto:richelieureserved@gmail.com">richelieureserved@gmail.com</a>. We will verify your identity where reasonably necessary and respond within the deadline required by applicable law; where GDPR applies, this is generally within one month, subject to lawful extensions. Some information may be retained where legally permitted or required, including for security, dispute resolution, and other members’ continued use of shared workspaces. Do not email passwords or highly sensitive records.</p><h2>9. Children and eligibility</h2><p>The service is intended for business use, not for children. Do not use it if you are not legally eligible to enter the agreement or if your organization has not authorized your use.</p><h2>10. Operator and contact</h2><p>The Last Time Machine is operated by Dimitre Richelieu, business address Mourne Dou Don Road, Castries, Saint Lucia. Privacy contact: <a href="mailto:richelieureserved@gmail.com">richelieureserved@gmail.com</a>. We will update this notice when our providers, data practices, or legal obligations materially change.</p></>:<><h2>Use the service lawfully</h2><p>Use The Last Time Machine only for lawful business knowledge management and only with workspaces and content you are authorized to access.</p><h2>Prohibited conduct</h2><ul><li>Accessing another workspace, account, or record without permission.</li><li>Uploading malware, attempting to exploit the application, or disrupting service availability.</li><li>Uploading content that infringes intellectual property, privacy, confidentiality, or other rights.</li><li>Using the service for fraud, harassment, unlawful surveillance, or any illegal purpose.</li><li>Storing passwords, payment-card information, government IDs, health records, or other sensitive secrets in solution records.</li><li>Trying to evade authentication, invitation expiry, workspace access policies, or usage limits.</li></ul><h2>Reporting misuse</h2><p>Report suspected abuse or unauthorized access to <a href="mailto:richelieureserved@gmail.com">richelieureserved@gmail.com</a>. Access may be restricted to protect users or comply with law.</p></>}</article><footer className="legal-page-footer"><nav className="legal-footer" aria-label="Legal pages"><a href="/terms">Terms of Service</a><a href="/privacy">Privacy Policy</a><a href="/acceptable-use">Acceptable Use</a></nav></footer></div>;
 }
 
-function Modal({kind,item,categories=[],onClose,onSave,onEdit,onDelete,saving,signedIn,error:saveError,canEdit=true,canDelete=true}) {
+function Modal({kind,item,categories=[],onClose,onSave,onEdit,onDelete,onReview,saving,signedIn,error:saveError,canEdit=true,canDelete=true,canReview=false,reviewEnabled=false}) {
   const [title,setTitle]=useState(item?.title||'');
   const [problem,setProblem]=useState(item?.problem_description||'');
   const [category,setCategory]=useState(item?.category||'General');
@@ -1528,7 +1615,7 @@ function Modal({kind,item,categories=[],onClose,onSave,onEdit,onDelete,saving,si
   function submit(e){e.preventDefault();setError('');if(!title.trim()){setError('Add a title for this problem.');return;}if(title.trim().length>200){setError('Title must be 200 characters or fewer.');return;}if(!steps.trim()){setError('Add at least one solution step.');return;}if(creatingCategory&&!newCategory.trim()){setError('Enter a category name or choose an existing category.');return;}const rawCategory = creatingCategory ? newCategory : (categoryMatch || category);const cleanCategory = String(rawCategory || 'General').trim().replace(/\s+/g, ' ').slice(0,60) || 'General';const canonicalCategory = categories.find(value => categoryKey(value) === categoryKey(cleanCategory)) || cleanCategory;onSave({id:item?.id,title:title.trim(),problem_description:problem.trim(),category:canonicalCategory,steps:steps.split('\n').map(s=>s.trim()).filter(Boolean),outcome:outcome.trim(),imagePath,imageFile,oldImagePath:item?.image_path||null});}
   return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><div className={`modal ${isForm?'modal-wide':''}`} role="dialog" aria-modal="true"><div className="modal-head"><div><span className="modal-kicker">{isForm?'CAPTURE KNOWLEDGE':'SOLUTION DETAILS'}</span><h2>{kind==='new'?'Record a new fix':kind==='edit'?'Edit solution':item?.title}</h2></div><button className="icon-btn" onClick={onClose}><X size={19}/></button></div>
     {isForm?<form className="solution-form" onSubmit={submit}><label>Problem title <em>Required</em><input autoFocus value={title} onChange={e=>setTitle(e.target.value)} maxLength={200} placeholder="e.g. Customer payment keeps failing" required/></label><div className="form-two"><label>Category <em>Choose an existing category or create one</em><select value={creatingCategory ? "__create__" : (categoryMatch || category)} onChange={e=>{if(e.target.value==="__create__"){setCreatingCategory(true);setNewCategory("");}else{setCreatingCategory(false);setCategory(e.target.value);}}} aria-label="Choose category">{categories.map(c=><option key={c} value={c}>{c}</option>)}{!categoryMatch&&category&&<option value={category}>{category}</option>}<option value="__create__">＋ Create new category…</option></select>{creatingCategory&&<div className="category-create-row"><input autoFocus value={newCategory} onChange={e=>setNewCategory(e.target.value)} maxLength={60} placeholder="New category name" aria-label="New category name"/><button type="button" className="secondary-btn" onClick={()=>{const clean=newCategory.trim().replace(/\s+/g," ");if(!clean){setError("Enter a category name first.");return;}const existing=categories.find(c=>categoryKey(c)===categoryKey(clean));setCategory(existing||clean);setCreatingCategory(false);setNewCategory("");setError("");}}>Use category</button></div>}</label><label>What happened?<textarea value={problem} onChange={e=>setProblem(e.target.value)} rows={3} placeholder="Describe the problem and any symptoms…"/></label></div><label>Steps that fixed it <em>Required · one step per line</em><textarea value={steps} onChange={e=>setSteps(e.target.value)} rows={5} placeholder={'1. Check the account status\n2. Verify the settings\n3. Retry and confirm'} required/></label><label>Final outcome<textarea value={outcome} onChange={e=>setOutcome(e.target.value)} rows={2} placeholder="How did you confirm the problem was solved?"/></label><div className="optional-image-field"><label htmlFor="solution-image">Reference image <em>Optional</em></label><p>Add a screenshot or photo to help explain the fix. Images are private to your workspace. JPG, PNG, WebP or GIF · max 5 MB.</p><input id="solution-image" type="file" accept="image/*" onChange={e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>5*1024*1024){setError('Images must be 5 MB or smaller.');e.target.value='';return;}setImageFile(f);setImagePath(null);setImagePreview(URL.createObjectURL(f));setError('');}} />{imagePreview&&<div className="image-preview-wrap"><img className="image-preview" src={imagePreview} alt="Selected solution reference" /><button type="button" className="secondary-btn" onClick={()=>{setImageFile(null);setImagePath(null);setImagePreview('');const input=document.getElementById('solution-image');if(input)input.value='';}}>Remove image</button></div>}</div>{error&&<div className="form-error" role="alert">{error}</div>}{saveError&&<div className="form-error" role="alert">{saveError}</div>}<div className="modal-actions"><button type="button" className="secondary-btn" onClick={onClose}>Cancel</button><button className="primary-btn" disabled={saving}>{saving?'Saving…':<><Check size={17}/> Save solution</>}</button></div></form>:
-    <div className="solution-detail"><div className="detail-meta"><span className="detail-category">{item?.category||'General'}</span><span><Clock3 size={14}/> Updated {new Date(item?.updated_at||item?.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</span></div><h3>What happened</h3><p>{item?.problem_description||'No description recorded.'}</p>{item?.image_url&&<div className="detail-image-wrap"><h3>Reference image</h3><a href={item.image_url} target="_blank" rel="noreferrer"><img className="detail-image" src={item.image_url} alt={`Reference for ${item.title}`} /></a></div>}<h3>Steps to fix it</h3><ol className="detail-steps">{(item?.steps||[]).map((step,i)=><li key={i}><span>{i+1}</span><p>{step}</p></li>)}</ol><h3>Outcome</h3><p>{item?.outcome||'No outcome recorded.'}</p><div className="modal-actions detail-actions">{canDelete&&<button className="danger-btn" onClick={()=>onDelete(item)}><Trash2 size={16}/> Delete</button>}{canEdit&&<button className="primary-btn" onClick={onEdit}><Pencil size={16}/> Edit solution</button>}</div></div>}
+    <div className="solution-detail"><div className="detail-meta"><span className="detail-category">{item?.category||'General'}</span>{reviewEnabled&&<span className={`solution-review-badge status-${item?.review_status||'approved'}`}>{item?.review_status==='pending'?'Pending review':item?.review_status==='changes_requested'?'Changes requested':'Approved'}</span>}<span><Clock3 size={14}/> Updated {new Date(item?.updated_at||item?.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</span></div><h3>What happened</h3><p>{item?.problem_description||'No description recorded.'}</p>{item?.image_url&&<div className="detail-image-wrap"><h3>Reference image</h3><a href={item.image_url} target="_blank" rel="noreferrer"><img className="detail-image" src={item.image_url} alt={`Reference for ${item.title}`} /></a></div>}<h3>Steps to fix it</h3><ol className="detail-steps">{(item?.steps||[]).map((step,i)=><li key={i}><span>{i+1}</span><p>{step}</p></li>)}</ol><h3>Outcome</h3><p>{item?.outcome||'No outcome recorded.'}</p><div className="modal-actions detail-actions">{canDelete&&<button className="danger-btn" onClick={()=>onDelete(item)}><Trash2 size={16}/> Delete</button>}{canEdit&&<button className="primary-btn" onClick={onEdit}><Pencil size={16}/> Edit solution</button>}{reviewEnabled&&canReview&&item?.review_status!=='approved'&&<><button type="button" className="secondary-btn" onClick={()=>onReview(item,'changes_requested')} disabled={saving}><Pencil size={16}/> Request changes</button><button type="button" className="primary-btn" onClick={()=>onReview(item,'approved')} disabled={saving}><Check size={16}/> Approve &amp; publish</button></>}</div></div>}
     </div></div>;
 }
 function timeAgo(date) { if(!date)return 'recently'; const days=Math.max(0,Math.floor((Date.now()-new Date(date).getTime())/86400000)); if(days===0)return 'today';if(days===1)return 'yesterday';if(days<7)return `${days} days ago`;if(days<30)return `${Math.floor(days/7)}w ago`;return new Date(date).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
