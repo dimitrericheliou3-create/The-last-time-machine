@@ -10,6 +10,7 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [x] Signup sends versioned legal acceptance metadata; database trigger records it in `public.user_legal_acceptances`.
 - [x] Account deletion UI and a JWT-protected `delete-account` Edge Function are present. The function refuses deletion when the user owns a workspace with other members, cleans private image files for personal workspaces, removes owned workspace data, and preserves shared-workspace solution records by reassigning authorship.
 - [x] CSV export formula injection mitigation, solution image replacement cleanup, and secure single-use team invitations are present in this source build.
+- [x] Business-only Solution review toggle, submission states, reviewer actions, and database-side entitlement/RLS checks are implemented in this source build; end-to-end role tests remain outstanding.
 
 ## Still required before public launch
 - [x] Add operator name (Dimitre Richelieu), business address (Mourne Dou Don Road, Castries, Saint Lucia), and support/privacy email (richelieureserved@gmail.com) to legal pages and source documents.
@@ -108,3 +109,13 @@ This checklist is intentionally separate from payment setup. Do not mark tests p
 - [ ] Run two-account end-to-end tests of workspace isolation, member permission boundaries, image access, plan caps, sign-up, and account deletion against the deployed app.
 - [ ] Supabase Security Advisor still reports the intentionally authenticated SECURITY DEFINER activity RPC and that leaked-password protection is disabled. The RPC is constrained to updating only the caller's activity timestamp and has a locked search path; leaked-password protection needs Pro or above.
 - [ ] Check default privileges for any future objects created by Supabase-managed supabase_admin; the active migration role's defaults are locked down, but that managed role's defaults are controlled by Supabase.
+
+
+## Business Solution review (implemented, not yet end-to-end verified)
+- [x] Workspace owners can enable/disable Solution review only while the workspace has an active Business subscription.
+- [x] New and edited solutions become pending when review is enabled; only approved solutions are visible to ordinary workspace members.
+- [x] Owners and admins can approve submissions or request changes; the latest submitter can still see their own pending revision.
+- [x] Disabling review or losing Business entitlement automatically approves pending solutions and disables the setting.
+- [ ] Test with separate owner, admin, editor, and view-only accounts: pending visibility, approval, request-changes, resubmission, and attempts to spoof review status over the API.
+- [ ] Test that Starter/Team workspaces cannot enable the setting directly through the API, and that cancelling/downgrading a Business subscription disables the feature safely.
+- [ ] Test an editor revising a solution created by another member, image replacement while pending, and turning review off with pending items.
