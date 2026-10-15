@@ -29,7 +29,7 @@ A React + Vite web app for recording and searching business troubleshooting know
 3. Copy `.env.example` to `.env`.
 4. In Supabase, open Project Settings → API Keys (or the Connect dialog).
 5. Put the project URL in `VITE_SUPABASE_URL` and the **publishable** key (`sb_publishable_...`) in `VITE_SUPABASE_PUBLISHABLE_KEY`.
-6. In Supabase Authentication settings, configure the Site URL and allow-list the deployed app origin under redirect URLs (add any custom domain too). Signup confirmation links return to the current app origin and should open the new account as a signed-in session automatically.
+6. In Supabase Authentication → URL Configuration, set the Site URL to `https://the-last-time-machine.pages.dev` and add `https://the-last-time-machine.pages.dev/**` under Redirect URLs. The app explicitly uses the current deployed origin for confirmation/reset links, and local development defaults to the live Pages URL unless `VITE_AUTH_REDIRECT_URL=http://localhost:3000` is set intentionally. Old emails may still carry an earlier `localhost:3000` destination, so request a fresh link after changing settings.
 7. In Authentication → Providers → Email, choose whether to require email confirmation.
 8. Run:
 
