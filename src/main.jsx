@@ -21,6 +21,17 @@ const TEAM_SOLUTION_LIMIT = 500;
 const BUSINESS_INCLUDED_SOLUTIONS = 2500;
 const BUSINESS_EXTRA_SOLUTION_MONTHLY_PRICE = 0.05;
 
+const getAuthRedirectUrl = () => {
+  const configured = String(import.meta.env.VITE_AUTH_REDIRECT_URL || '').trim();
+  if (configured) return configured.replace(/\/+$/, '');
+  if (typeof window === 'undefined') return 'https://the-last-time-machine.pages.dev';
+  if (['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname)) {
+    // Never send real users' email links to a development server that may be offline.
+    return 'https://the-last-time-machine.pages.dev';
+  }
+  return window.location.origin;
+};
+
 const moneyForOverage = (amount) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
 
 function personNameFromEmail(email) {
@@ -536,7 +547,7 @@ function App() {
     try {
       if (authMode === 'signup') {
         if (!legalAccepted) throw new Error('Please accept the Terms of Service and Privacy Policy to create an account.');
-        const {data,error} = await supabase.auth.signUp({email:authEmail.trim(),password:authPassword, options:{emailRedirectTo:window.location.origin, data:{legal_terms_version:TERMS_VERSION, legal_privacy_version:PRIVACY_VERSION, legal_accepted_at:new Date().toISOString()}}});
+        const {data,error} = await supabase.auth.signUp({email:authEmail.trim(),password:authPassword, options:{emailRedirectTo:getAuthRedirectUrl(), data:{legal_terms_version:TERMS_VERSION, legal_privacy_version:PRIVACY_VERSION, legal_accepted_at:new Date().toISOString()}}});
         if (error) throw error;
         if (!data.session) setAuthMessage('Check your email and confirm your address. This page will sign you in and open your workspace automatically.');
         else setAuthMessage('Account created! Setting up your workspace…');
@@ -571,7 +582,7 @@ function App() {
     setSaving(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(authEmail.trim(), {
-        redirectTo: window.location.origin
+        redirectTo: getAuthRedirectUrl()
       });
       if (error) throw error;
       setAuthMessage('If an account exists for that email, a password-reset link has been sent.');
