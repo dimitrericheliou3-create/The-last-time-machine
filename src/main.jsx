@@ -22,12 +22,26 @@ const BUSINESS_INCLUDED_SOLUTIONS = 2500;
 const BUSINESS_EXTRA_SOLUTION_MONTHLY_PRICE = 0.05;
 
 const getAuthRedirectUrl = () => {
+  const productionUrl = 'https://the-last-time-machine.pages.dev';
+  if (typeof window === 'undefined') return productionUrl;
+  const localHosts = ['localhost', '127.0.0.1', '::1', '[::1]'];
+  const isLocalHost = (hostname) => localHosts.includes(String(hostname || '').replace(/^\[|\]$/g, ''));
   const configured = String(import.meta.env.VITE_AUTH_REDIRECT_URL || '').trim();
-  if (configured) return configured.replace(/\/+$/, '');
-  if (typeof window === 'undefined') return 'https://the-last-time-machine.pages.dev';
-  if (['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname)) {
+  if (configured) {
+    try {
+      const target = new URL(configured, window.location.origin);
+      // A stale Pages build variable must never send production auth emails to localhost.
+      if (!isLocalHost(window.location.hostname) && isLocalHost(target.hostname)) return productionUrl;
+      if (target.protocol === 'https:' || (isLocalHost(window.location.hostname) && target.protocol === 'http:')) {
+        return target.origin + target.pathname.replace(/\/+$/, '');
+      }
+    } catch {
+      // Fall back to the current deployed origin if the optional override is malformed.
+    }
+  }
+  if (isLocalHost(window.location.hostname)) {
     // Never send real users' email links to a development server that may be offline.
-    return 'https://the-last-time-machine.pages.dev';
+    return productionUrl;
   }
   return window.location.origin;
 };
