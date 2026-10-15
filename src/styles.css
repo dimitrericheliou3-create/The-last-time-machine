@@ -3465,3 +3465,13 @@ body,.auth-shell,.loading-screen {
 .review-toggle-locked .review-toggle-switch{opacity:.42;filter:grayscale(.35)}
 .review-toggle-locked .review-toggle-copy strong{color:var(--muted,#9ca3af)}
 .review-lock-icon{margin-left:auto;flex-shrink:0;color:var(--muted,#9ca3af)}
+
+/* Keep focused sign-in fields transparent; the wrapper owns the visible focus ring. */
+.auth-shell .auth-form .auth-input input:focus {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  outline: none;
+  caret-color: #29364a;
+}
+
